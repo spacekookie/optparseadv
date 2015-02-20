@@ -20,7 +20,6 @@ import itertools
 import warnings
 import re
 
-
 # Some variables to be used.
 __VALUE__ = '__VALUE__'
 __PREFIX__ = '__PREFIX__'
@@ -31,16 +30,13 @@ __FUNCT__ = '__funct__'
 __DATAFIELD__ = '__defdat__'
 __TYPE__ = '__type__'
 
-
 # Main class
 #
 class OptParseAdv:
 
-	def __init__(self, parent, masters = None):
-		self.parent = parent #Is this needed?
+	def __init__(self, masters = None):
 		self.set_masters(masters)
-		self.iterating = False
-
+		self.debug = False
 
 	# Hash of master level commands. CAN contain a global function to determine actions of
 	# subcommands.
@@ -126,6 +122,12 @@ class OptParseAdv:
 	def make_raw(self, string):
 		return string.replace('-', '')
 
+	# Enables debug mode on the parser.
+	# Will for example output the parsed and translated/ chopped strings to the console.
+	#
+	def enable_debug(self):
+		self.debug = True
+
 	def alias_to_master(self, alias):
 		for master in self.opt_hash:
 			for alias_list in self.opt_hash[master][__ALIASES__]:
@@ -157,7 +159,7 @@ class OptParseAdv:
 		cmd_tree = {}
 		focus = None
 
-		print c, "==>", content
+		if self.debug: print c, "==>", content
 
 		for item in content:
 			# print item
@@ -205,29 +207,3 @@ class OptParseAdv:
 				pass
 				# print content[index]
 			counter += 1
-
-class Test:
-
-	def __init__(self):
-		p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy}) # Sets up the master level commands to connect and copy
-		p.add_suboptions('copy', {'--file': (None, __FIELD__), '--target': ('~/poke', __FIELD__)})
-		p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
-		p.master_aliases('copy', ['cp'])
-
-		p.parse('connect cp -f=/foo/bar.poo -t=/foo cp -f=/peter -t=/pan')
-		# p.add_suboptions('connect', ('-t', None), use='prefix')
-		# p.add_suboptions('copy', ('--file', None), use=__FIELD__)
-		# p.add_suboptions('copy', ('--target', None), use=__FIELD__)
-		# p.parse("copy --file=/path/to/file --target=~/Documents/ ")
-
-	def connect(self, master, sub, data):
-		print "connect:", master, sub, data
-		pass
-
-	def copy(self, master, sub, data):
-		print "copy:", master, sub, data
-		pass
-
-if __name__ == "__main__":
-	t = Test()
-

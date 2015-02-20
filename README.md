@@ -9,22 +9,19 @@ It also adds support for chaining commands and options such as they are being ex
 
 ```python
 
+	import adv_opt_parse as parse
 
-	# Sets up the parser with it's master level commands 'connect' and 'copy' 
-	# bound to the functions 'self.connect' and 'self.copy'
-	p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy})
-	
-	# Add suboptions for copy with a hash and their default usage to FIELD
-	p.add_suboptions('copy', {'--file': (None, __FIELD__), '--target': ('~/poke', __FIELD__)})
+	def connect(master, sub, data):
+		print "This is a connect to", sub, "with data", data
 
-	# Add aliases for both '--target'and '--file'
+	def copy(master, sub, data):
+		print "This is a copy with", sub, "and", data
+
+	p = parse.OptParseAdv({'connect':connect,'copy':copy})
+	# p.enable_debug()
+	p.add_suboptions('copy', {'--file': (None, parse.__FIELD__), '--target': ('~/poke', parse.__FIELD__)})
 	p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
-	
-	# Add alise for copy
 	p.master_aliases('copy', ['cp'])
-
-	# Use all of that to parse a lovely string.
-	p.parse('cp -f=/foo/bar.poo -t=/foo connect')
-
+	p.parse('connect cp -f=/foo/bar.poo -t=/foo')
 
 ```
