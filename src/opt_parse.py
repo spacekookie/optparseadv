@@ -157,8 +157,7 @@ class OptParseAdv:
 		cmd_tree = {}
 		focus = None
 
-		# print self.opt_hash
-		print content
+		print c, "==>", content
 
 		for item in content:
 			# print item
@@ -167,37 +166,45 @@ class OptParseAdv:
 					master_indices.append(counter)
 			counter += 1
 
-		#print master_indices
-
 		counter = 0
+		master_indices.append(len(content) - 1)
+		# print master_indices
 		for index in master_indices:
 			if (counter + 1) < len(master_indices):
-				#print "Crnt is ==>", index
-				#print "Next is ==>", master_indices[counter + 1]
+				# print (counter + 1), len(master_indices)
+				data_transmit = {}
+				subs = []
 				sub_counter = 0
-				for cmd in itertools.islice(content, index, master_indices[counter + 1]):
+				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
+					# print index, master_indices[counter + 1], sub_counter
 					if sub_counter == 0:
 						focus = self.alias_to_master(cmd)
 						cmd_tree[focus] = {}
 					else:
 						if "=" in cmd:
 							rgged = cmd.replace('=', ' ').split()
+
 							for sub_command in rgged:
 								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
 								if trans_sub_cmd in self.opt_hash[focus]:
-									print "'%s'" % rgged[1], "combined with", trans_sub_cmd
-									call = self.opt_hash[focus][__FUNCT__]
-									call(focus, trans_sub_cmd, None)
+									# print "'%s'" % rgged[1], "combined with", trans_sub_cmd
+									data_transmit[trans_sub_cmd] = rgged[1]
+									subs.append(trans_sub_cmd)
 
-						# print cmd
+						else:
+							rgged = cmd.replace('=', ' ').split()
+							for sub_command in rgged:
+								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
+								if trans_sub_cmd in self.opt_hash[focus]:
+									# print "'%s'" % rgged[1], "combined with", trans_sub_cmd
+									data_transmit[trans_sub_cmd] = rgged[1]
+									subs.append(trans_sub_cmd)
 					sub_counter += 1
-				# print "\n", cmd_tree, "\n"
+				self.opt_hash[focus][__FUNCT__](focus, subs, data_transmit)
 			else:
-				print "No next. Last is", counter
-				break
+				pass
+				# print content[index]
 			counter += 1
-
-		print "EX MOTHERFUCKING CELSIOR!"
 
 class Test:
 
@@ -207,18 +214,18 @@ class Test:
 		p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 		p.master_aliases('copy', ['cp'])
 
-		p.parse('cp -f=/foo/bar.poo -t=/foo connect')
+		p.parse('connect cp -f=/foo/bar.poo -t=/foo cp -f=/peter -t=/pan')
 		# p.add_suboptions('connect', ('-t', None), use='prefix')
 		# p.add_suboptions('copy', ('--file', None), use=__FIELD__)
 		# p.add_suboptions('copy', ('--target', None), use=__FIELD__)
 		# p.parse("copy --file=/path/to/file --target=~/Documents/ ")
 
 	def connect(self, master, sub, data):
-		print "YES IT WORKS"
-		print sub + ": " + data
+		print "connect:", master, sub, data
+		pass
 
 	def copy(self, master, sub, data):
-		print "FUCK YES FUCK FUCK FUCK!!!"
+		print "copy:", master, sub, data
 		pass
 
 if __name__ == "__main__":
