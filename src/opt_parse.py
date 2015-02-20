@@ -16,6 +16,7 @@
 
 
 # Some imports
+import itertools
 import warnings
 import re
 
@@ -125,135 +126,77 @@ class OptParseAdv:
 	def make_raw(self, string):
 		return string.replace('-', '')
 
+	def alias_to_master(self, alias):
+		for master in self.opt_hash:
+			for alias_list in self.opt_hash[master][__ALIASES__]:
+				if alias in alias_list:
+					return master
+		return None
+
+	def alias_to_sub(self, master, alias):
+		for sub in self.opt_hash[master]:
+			if "__" not in sub:
+				if alias in self.opt_hash[master][sub][__ALIASES__]:
+					return sub
+		return None
+
+		return
+		for sub in self.opt_hash[master]:
+			for alias_list in self.opt_hash[master][sub][__ALIASES__]:
+				if alias in alias_list:
+					return sub
+
 
 	def parse(self, c = None):
 		# \-+\w+=|\w+=
 		# content = re.sub('\-+\w+=|\w+=', '=', c).split()
 
 		content = (sys.args if (c == None) else c.split())
-
-		option_input = []
-		tmp = []
-		focus = None
-		cmd_range = []
-
-		# print content
-
-		# print self.opt_hash
-
 		counter = 0
 		master_indices = []
+		cmd_tree = {}
+		focus = None
 
 		# print self.opt_hash
+		print content
 
 		for item in content:
-			print item
+			# print item
 			for master in self.opt_hash:
 				if item in self.opt_hash[master][__ALIASES__]:
 					master_indices.append(counter)
 			counter += 1
 
-		print master_indices
+		#print master_indices
 
-		# print self.opt_hash
-		return
+		counter = 0
+		for index in master_indices:
+			if (counter + 1) < len(master_indices):
+				#print "Crnt is ==>", index
+				#print "Next is ==>", master_indices[counter + 1]
+				sub_counter = 0
+				for cmd in itertools.islice(content, index, master_indices[counter + 1]):
+					if sub_counter == 0:
+						focus = self.alias_to_master(cmd)
+						cmd_tree[focus] = {}
+					else:
+						if "=" in cmd:
+							rgged = cmd.replace('=', ' ').split()
+							for sub_command in rgged:
+								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
+								if trans_sub_cmd in self.opt_hash[focus]:
+									print "'%s'" % rgged[1], "combined with", trans_sub_cmd
+									print "THE FUNCTION FOR THIS IS", self.opt_hash[focus][__FUNCT__]
 
-
-		# This piece of code breaks the input up into sub-master command strings to be handled
-		# one at a time.
-		#
-		for mi, item in enumerate(content):
-			if item in self.masters:
-				tmp.append(mi)
-
-		for first in tmp:
-			if (first + 1) >= len(tmp):
-				cmd_range.append((tmp[-1], len(content)))
+						# print cmd
+					sub_counter += 1
+				# print "\n", cmd_tree, "\n"
+			else:
+				print "No next. Last is", counter
 				break
-			cmd_range.append((tmp[first], tmp[first + 1]))
-		
-		for master in cmd_range:
-			start = master[0]
-			end = master[-1]
+			counter += 1
 
-			tmp_cut = content[start:end]
-			tmp_opt = { 'self' : content[start] }
-
-			print "%s Heloo" % tmp_cut
-
-
-			for i in range(0, len(tmp_cut)):
-				can = tmp_cut[i]
-				par = self.opt_hash[tmp_opt['self']]
-
-				if can in par[1]:
-					if par[0] == __PREFIX__:
-						# TODO: Check if the next field isn't missing. If it is, throw error.
-						#  Also check that it is in fact a valid data field (not another command)
-						tmp_opt[can] = tmp_cut[i + 1]
-					elif par[0] == __FIELD__:
-						# TODO: See above
-						tmp_opt[self.make_raw(can)] = tmp_cut[i  + 1]
-					elif par[0] == __VALUE__:
-						tmp_opt[self.make_raw(can)] = True
-						pass
-
-			option_input.append(tmp_opt)
-						
-					
-
-			# for i, cmd in enumerate(tmp_cut):
-			# 	if tmp_cut[i] in (self.opt_hash[tmp_cut[0]]):
-			# 		print tmp_cut[i]
-
-
-			# print 
-		print option_input
-		return
-
-		for idx, master in enumerate(content):
-			tmp_opt = {'self':master} # Put all stuff in here
-			s_idx = idx
-			e_idx = -1
-
-			for run, n in enumerate(content, start=idx):
-				if n in self.masters or n == None:
-					e_idx = run
-					break
-
-			print s_idx, e_idx
-
-			# print idx, val
-		return
-
-		index = 0
-		while content: # Stops if list is empty
-			tmp_opt = {}
-			tmp = content.pop(0)
-
-			if tmp in self.masters:
-				if focus == None:
-					# Means it's the first master level command
-					focus = tmp
-					tmp_opt['self'] = 'focus'
-				
-					# Means it's the next master level command
-					option_input.append(tmp_opt) # Add the option hash to the list
-				index += 1
-				continue
-
-			if tmp in self.opt_hash[focus]:
-				print "YAY! I found: '" + tmp + "' at index %i" % index
-			index += 1
-
-		print option_input
-
-
-
-		# COMMAND copy /some/file -t /var/www connect nuclear -u root -t /var/www
-		# 
-		#
-		#
+		print "EX MOTHERFUCKING CELSIOR!"
 
 class Test:
 
@@ -277,3 +220,4 @@ class Test:
 
 if __name__ == "__main__":
 	t = Test()
+

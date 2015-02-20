@@ -15,7 +15,7 @@ It also adds support for chaining commands and options such as they are being ex
 	p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy})
 	
 	# Add suboptions for copy with a hash and their default usage to FIELD
-	p.add_suboptions('copy', {'--file': None, '--target': '~/poke'}, use=__FIELD__)
+	p.add_suboptions('copy', {'--file': (None, __FIELD__), '--target': ('~/poke', __FIELD__)})
 
 	# Add aliases for both '--target'and '--file'
 	p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
