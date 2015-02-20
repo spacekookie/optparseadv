@@ -17,6 +17,7 @@
 
 # Some imports
 import warnings
+import re
 
 
 # Some variables to be used.
@@ -26,7 +27,8 @@ __FIELD__ = '__FIELD__'
 
 __ALIASES__ = '__alias__'
 __FUNCT__ = '__funct__'
-__DATAFIELD__ = '__data__'
+__DATAFIELD__ = '__defdat__'
+__TYPE__ = '__type__'
 
 
 # Main class
@@ -37,7 +39,6 @@ class OptParseAdv:
 		self.parent = parent #Is this needed?
 		self.set_masters(masters)
 		self.iterating = False
-		self.opt_hash = {}
 
 
 	# Hash of master level commands. CAN contain a global function to determine actions of
@@ -45,11 +46,13 @@ class OptParseAdv:
 	# (See docs).
 	#
 	def set_masters(self, masters):
-		if masters == None:
-			warnings.warn("Warning! You shouldn't init a parser without your master commands set!")
-		self.masters = masters
-
-
+		if masters == None: warnings.warn("Warning! You shouldn't init a parser without your master commands set!")
+		# self.masters = master
+		self.opt_hash = {}
+		for key, value in masters.iteritems():
+			self.opt_hash[key] = {}
+			self.opt_hash[key][__FUNCT__] = value
+			self.master_aliases(key, [])
 
 	# Takes the master level command and a hash of data
 	# The hash of data needs to be formatted in the following sense:
@@ -69,16 +72,16 @@ class OptParseAdv:
 	#							'field'	: --file=/some/data
 	#
 	# 
-	def add_suboptions(self, master, data, use = 'value'):
+	def add_suboptions(self, master, data):
 		if master not in self.opt_hash: self.opt_hash[master] = {}
 		
 		for key, value in data.iteritems():
 			if key not in self.opt_hash[master]: self.opt_hash[master][key] = {}
 			self.opt_hash[master][key][__ALIASES__] = []
-			self.opt_hash[master][key][__FUNCT__] = value
-			self.opt_hash[master][key][__DATAFIELD__] = use
+			self.opt_hash[master][key][__TYPE__] = value[1]
+			self.opt_hash[master][key][__DATAFIELD__] = value[0]
 
-		print self.opt_hash
+		# print self.opt_hash
 		# if data[0] not in self.opt_hash[master]: self.opt_hash[master][data[0]] = (data[1], use)
 
 	# Create aliases for a master command that invoke the same
@@ -89,8 +92,9 @@ class OptParseAdv:
 	#
 	def master_aliases(self, master, aliases):
 		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
+		if master not in aliases: aliases.append(master)
 		self.opt_hash[master][__ALIASES__] = aliases
-		print self.opt_hash
+		# print self.opt_hash
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -116,24 +120,42 @@ class OptParseAdv:
 			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
 			self.opt_hash[master][key][__ALIASES__] = value
 
-		print self.opt_hash[master]
-		pass
-
+		# print self.opt_hash[master]
 
 	def make_raw(self, string):
 		return string.replace('-', '')
 
 
 	def parse(self, c = None):
-		content = (sys.args if (c == None) else c.replace("=", " ").split())
+		# \-+\w+=|\w+=
+		# content = re.sub('\-+\w+=|\w+=', '=', c).split()
+
+		content = (sys.args if (c == None) else c.split())
 
 		option_input = []
 		tmp = []
 		focus = None
 		cmd_range = []
 
-		print content
-		print self.opt_hash
+		# print content
+
+		# print self.opt_hash
+
+		counter = 0
+		master_indices = []
+
+		# print self.opt_hash
+
+		for item in content:
+			print item
+			for master in self.opt_hash:
+				if item in self.opt_hash[master][__ALIASES__]:
+					master_indices.append(counter)
+			counter += 1
+
+		print master_indices
+
+		# print self.opt_hash
 		return
 
 
@@ -237,7 +259,7 @@ class Test:
 
 	def __init__(self):
 		p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy}) # Sets up the master level commands to connect and copy
-		p.add_suboptions('copy', {'--file': None, '--target': '~/poke'}, use=__FIELD__)
+		p.add_suboptions('copy', {'--file': (None, __FIELD__), '--target': ('~/poke', __FIELD__)})
 		p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 		p.master_aliases('copy', ['cp'])
 

@@ -10,8 +10,8 @@ It also adds support for chaining commands and options such as they are being ex
 ```python
 
 
-	# Sets up the parser with it's master level commands 'connect' and 'copy' bound to the functions
-	# self.connect and self.copy
+	# Sets up the parser with it's master level commands 'connect' and 'copy' 
+	# bound to the functions 'self.connect' and 'self.copy'
 	p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy})
 	
 	# Add suboptions for copy with a hash and their default usage to FIELD
