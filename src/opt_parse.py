@@ -20,13 +20,13 @@ import warnings
 
 
 # Some variables to be used.
-__VALUE__ = 'VALUE'
-__PREFIX__ = 'PREFIX'
-__FIELD__ = 'FIELD'
+__VALUE__ = '__VALUE__'
+__PREFIX__ = '__PREFIX__'
+__FIELD__ = '__FIELD__'
 
-__ALIASES__ = 'aliases'
-__FUNCT__ = 'funct'
-__DATAFIELD__ = 'use'
+__ALIASES__ = '__alias__'
+__FUNCT__ = '__funct__'
+__DATAFIELD__ = '__data__'
 
 
 # Main class
@@ -88,8 +88,9 @@ class OptParseAdv:
 	# input (such as 'rails server' vs 'rails s' does it)
 	#
 	def master_aliases(self, master, aliases):
-		pass
-
+		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
+		self.opt_hash[master][__ALIASES__] = aliases
+		print self.opt_hash
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -108,7 +109,7 @@ class OptParseAdv:
 	# a master level command to be set at the same time without having
 	# to call this function multiple times.
 	#
-	def sub_alias(self, master, aliases):
+	def sub_aliases(self, master, aliases):
 		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
 
 		for key, value in aliases.iteritems():
@@ -231,16 +232,16 @@ class OptParseAdv:
 		# 
 		#
 		#
-			
-
-
 
 class Test:
 
 	def __init__(self):
 		p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy}) # Sets up the master level commands to connect and copy
-		p.add_suboptions('connect', {'--file': None, '--target': '~/poke'}, use=__FIELD__)
-		p.sub_alias('connect', {'--target': ['-t'], '--file': ['-f']})
+		p.add_suboptions('copy', {'--file': None, '--target': '~/poke'}, use=__FIELD__)
+		p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
+		p.master_aliases('copy', ['cp'])
+
+		p.parse('cp -f=/foo/bar.poo -t=/foo connect')
 		# p.add_suboptions('connect', ('-t', None), use='prefix')
 		# p.add_suboptions('copy', ('--file', None), use=__FIELD__)
 		# p.add_suboptions('copy', ('--target', None), use=__FIELD__)
