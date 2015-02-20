@@ -186,7 +186,8 @@ class OptParseAdv:
 								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
 								if trans_sub_cmd in self.opt_hash[focus]:
 									print "'%s'" % rgged[1], "combined with", trans_sub_cmd
-									print "THE FUNCTION FOR THIS IS", self.opt_hash[focus][__FUNCT__]
+									call = self.opt_hash[focus][__FUNCT__]
+									call(focus, trans_sub_cmd, None)
 
 						# print cmd
 					sub_counter += 1
@@ -213,9 +214,11 @@ class Test:
 		# p.parse("copy --file=/path/to/file --target=~/Documents/ ")
 
 	def connect(self, master, sub, data):
+		print "YES IT WORKS"
 		print sub + ": " + data
 
 	def copy(self, master, sub, data):
+		print "FUCK YES FUCK FUCK FUCK!!!"
 		pass
 
 if __name__ == "__main__":
