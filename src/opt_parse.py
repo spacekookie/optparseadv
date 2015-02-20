@@ -24,6 +24,10 @@ __VALUE__ = 'VALUE'
 __PREFIX__ = 'PREFIX'
 __FIELD__ = 'FIELD'
 
+__ALIASES__ = 'aliases'
+__FUNCT__ = 'funct'
+__DATAFIELD__ = 'use'
+
 
 # Main class
 #
@@ -54,7 +58,7 @@ class OptParseAdv:
 	# Additionally you pass a function from your parent class that gets called when this option is detected in a
 	# string that is being parsed. The function by detault takes three parameters: 
 	# 
-	# master command (i.e. copy), parent option (i.e. '-v'), data field (i.e. 'false'). So in an example for
+	# master command (i.e. copy), parent option (i.e. '-v'), data field default (i.e. 'false'). So in an example for
 	#
 	# "clone -L 2"
 	#
@@ -65,12 +69,17 @@ class OptParseAdv:
 	#							'field'	: --file=/some/data
 	#
 	# 
-	def add_suboption(self, master, data, use = 'value'):
-		print "Self: %s" % self
-		print "Master: %s" % master
-		print "Data:", data[0],":", data[1]
-		print "%s" % use
-		self.opt_hash[master][data[0]] = {}
+	def add_suboptions(self, master, data, use = 'value'):
+		if master not in self.opt_hash: self.opt_hash[master] = {}
+		
+		for key, value in data.iteritems():
+			if key not in self.opt_hash[master]: self.opt_hash[master][key] = {}
+			self.opt_hash[master][key][__ALIASES__] = []
+			self.opt_hash[master][key][__FUNCT__] = value
+			self.opt_hash[master][key][__DATAFIELD__] = use
+
+		print self.opt_hash
+		# if data[0] not in self.opt_hash[master]: self.opt_hash[master][data[0]] = (data[1], use)
 
 	# Create aliases for a master command that invoke the same
 	# functions as the actual master command.
@@ -92,7 +101,21 @@ class OptParseAdv:
 	# cryptic commands:
 	# poke server cp -f=~/file -t=directory/ 
 	#
-	def sub_alias(self, sub, aliases):
+	# == USAGE ==
+	# Specify the master level command as the first parameter.
+	# Then use a hash with the original subs as the indices and
+	# the aliases in a list as values. This allows for ALL aliases for
+	# a master level command to be set at the same time without having
+	# to call this function multiple times.
+	#
+	def sub_alias(self, master, aliases):
+		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
+
+		for key, value in aliases.iteritems():
+			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
+			self.opt_hash[master][key][__ALIASES__] = value
+
+		print self.opt_hash[master]
 		pass
 
 
@@ -216,10 +239,11 @@ class Test:
 
 	def __init__(self):
 		p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy}) # Sets up the master level commands to connect and copy
-		p.add_suboption('connect', ('--file', None), use=__FIELD__)
-		# p.add_suboption('connect', ('-t', None), use='prefix')
-		# p.add_suboption('copy', ('--file', None), use=__FIELD__)
-		# p.add_suboption('copy', ('--target', None), use=__FIELD__)
+		p.add_suboptions('connect', {'--file': None, '--target': '~/poke'}, use=__FIELD__)
+		p.sub_alias('connect', {'--target': ['-t'], '--file': ['-f']})
+		# p.add_suboptions('connect', ('-t', None), use='prefix')
+		# p.add_suboptions('copy', ('--file', None), use=__FIELD__)
+		# p.add_suboptions('copy', ('--target', None), use=__FIELD__)
 		# p.parse("copy --file=/path/to/file --target=~/Documents/ ")
 
 	def connect(self, master, sub, data):
