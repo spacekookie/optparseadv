@@ -13,13 +13,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#
 
 
-	# Some variables to be used.
-__VALUE__ = 'value'
-__PREFIX__ = 'prefix'
-__FIELD__ = 'field'
+# Some imports
+import warnings
+
+
+# Some variables to be used.
+__VALUE__ = 'VALUE'
+__PREFIX__ = 'PREFIX'
+__FIELD__ = 'FIELD'
 
 
 # Main class
@@ -39,7 +42,7 @@ class OptParseAdv:
 	#
 	def set_masters(self, masters):
 		if masters == None:
-			print "Warning! You shouldn't init a parser without your master commands set!"
+			warnings.warn("Warning! You shouldn't init a parser without your master commands set!")
 		self.masters = masters
 
 
@@ -57,14 +60,17 @@ class OptParseAdv:
 	#
 	# it would call the function: func('clone', '-L', '2') in the specified container class/ env.
 	#
-	# use parameters include:	'value'	: -v
+	# 'use' parameters include:	'value'	: -v
 	# 							'prefix': --logging true
 	#							'field'	: --file=/some/data
 	#
 	# 
 	def add_suboption(self, master, data, use = 'value'):
-		self.opt_hash[master] = (use, data)
-
+		print "Self: %s" % self
+		print "Master: %s" % master
+		print "Data:", data[0],":", data[1]
+		print "%s" % use
+		self.opt_hash[master][data[0]] = {}
 
 	# Create aliases for a master command that invoke the same
 	# functions as the actual master command.
@@ -72,7 +78,21 @@ class OptParseAdv:
 	# This can be used to shorten commands that user need to
 	# input (such as 'rails server' vs 'rails s' does it)
 	#
-	def asign_aliases(self, master, aliases):
+	def master_aliases(self, master, aliases):
+		pass
+
+
+	# Create aliases for a sub command that invoke the same
+	# functions as the actual sub command.
+	# 
+	# This can be used to shorten commands that user need to
+	# input (such as 'poke copy --file' vs 'poke copy -f')
+	#
+	# Can be combined with master alises to make short and nicely
+	# cryptic commands:
+	# poke server cp -f=~/file -t=directory/ 
+	#
+	def sub_alias(self, sub, aliases):
 		pass
 
 
@@ -88,6 +108,7 @@ class OptParseAdv:
 		focus = None
 		cmd_range = []
 
+		print content
 		print self.opt_hash
 		return
 
@@ -112,7 +133,7 @@ class OptParseAdv:
 			tmp_cut = content[start:end]
 			tmp_opt = { 'self' : content[start] }
 
-			print tmp_cut
+			print "%s Heloo" % tmp_cut
 
 
 			for i in range(0, len(tmp_cut)):
@@ -195,14 +216,14 @@ class Test:
 
 	def __init__(self):
 		p = OptParseAdv(self, {'connect':self.connect,'copy':self.copy}) # Sets up the master level commands to connect and copy
-		p.add_suboption('connect', {'--file': None}, use=__FIELD__)
-		# p.add_suboption('connect', {'-t': None}, use='prefix')
-		p.add_suboption('copy', {'--file': None}, use=__FIELD__)
-		p.parse("copy --file=/path/to/file")
+		p.add_suboption('connect', ('--file', None), use=__FIELD__)
+		# p.add_suboption('connect', ('-t', None), use='prefix')
+		# p.add_suboption('copy', ('--file', None), use=__FIELD__)
+		# p.add_suboption('copy', ('--target', None), use=__FIELD__)
+		# p.parse("copy --file=/path/to/file --target=~/Documents/ ")
 
 	def connect(self, master, sub, data):
 		print sub + ": " + data
-		pass
 
 	def copy(self, master, sub, data):
 		pass
