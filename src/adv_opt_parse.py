@@ -67,7 +67,7 @@ class OptParseAdv:
 		
 		for key, value in data.iteritems():
 			if key not in self.opt_hash[master]: self.opt_hash[master][key] = {}
-			self.opt_hash[master][key][__ALIASES__] = []
+			self.opt_hash[master][key][__ALIASES__] = [key]
 			self.opt_hash[master][key][__TYPE__] = value[1]
 			self.opt_hash[master][key][__DATAFIELD__] = value[0]
 
@@ -84,7 +84,19 @@ class OptParseAdv:
 		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
 		if master not in aliases: aliases.append(master)
 		self.opt_hash[master][__ALIASES__] = aliases
-		# print self.opt_hash
+
+
+	# Allow a master command to bind to a slave field.
+	def add_master_field(self, master, slave):
+		self.opt_hash[master][__LONELY__] = slave
+
+	# Added for Poke server handling.
+	def define_slaves(self, slaves):
+		if self.slaves == None: self.slaves = {}
+		for key, value in slaves:
+			if self.slaves[key] == None: self.slaves[key] = {}
+			self.slaves[key] = value
+
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -108,12 +120,7 @@ class OptParseAdv:
 
 		for key, value in aliases.iteritems():
 			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
-			self.opt_hash[master][key][__ALIASES__] = value
-
-		# print self.opt_hash[master]
-
-	def make_raw(self, string):
-		return string.replace('-', '')
+			self.opt_hash[master][key][__ALIASES__] += value
 
 	# Enables debug mode on the parser.
 	# Will for example output the parsed and translated/ chopped strings to the console.
@@ -194,13 +201,11 @@ class OptParseAdv:
 
 								if trans_sub_cmd in self.opt_hash[focus]:
 									data_transmit[trans_sub_cmd] = True
+
 									subs.append(trans_sub_cmd)
 								# print "THIS SHOULD NOT BE CALLED:", sub_command
 					sub_counter += 1
 				self.opt_hash[focus][__FUNCT__](focus, subs, data_transmit)
-			else:
-				pass
-				# print content[index]
 			counter += 1
 
 	def help_screen(self):
@@ -223,6 +228,13 @@ class OptParseAdv:
 		return None
 
 
+
+#########################
+#   TEST SCRIPT BELOW   #
+#########################
+
+
+
 def connect(master, sub, data):
 	print "This is a connect to", sub, "with data", data
 
@@ -234,8 +246,8 @@ p = OptParseAdv({'connect':connect, 'copy':copy})
 p.add_suboptions('connect', {'-X': (None, __VALUE__)})
 p.add_suboptions('copy', {'--file': (None, __FIELD__)})
 
-p.sub_aliases('connect', {'-X': ['-X']})
-p.sub_aliases('copy', {'--file': ['-f', "--file"]})
+# p.sub_aliases('connect', {'-X': ['-X']})
+p.sub_aliases('copy', {'--file': ['-f']})
 p.master_aliases('connect', ['c'])
 
 p.parse('copy --file=/path/to/file connect -X')
