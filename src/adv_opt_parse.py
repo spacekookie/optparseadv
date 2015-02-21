@@ -16,8 +16,11 @@ __VALUE__ = '__VALUE__'
 __PREFIX__ = '__PREFIX__'
 __FIELD__ = '__FIELD__'
 
-__LONELY__ = '__LONELY__'
+# Indicates that a master command can have a 1 to 1 binding
+# to another parameter afterwards.
+__SLAVE__ = '__slave__'
 
+# Values to be used in the options tree
 __ALIASES__ = '__alias__'
 __FUNCT__ = '__funct__'
 __DATAFIELD__ = '__defdat__'
@@ -29,6 +32,7 @@ class OptParseAdv:
 
 	def __init__(self, masters = None):
 		self.set_masters(masters)
+		self.slaves = None
 		self.debug = False
 
 	# Hash of master level commands. CAN contain a global function to determine actions of
@@ -43,6 +47,7 @@ class OptParseAdv:
 			self.opt_hash[key] = {}
 			self.opt_hash[key][__FUNCT__] = value
 			self.master_aliases(key, [])
+			self.set_master_field(key, False)
 
 	# Takes the master level command and a hash of data
 	# The hash of data needs to be formatted in the following sense:
@@ -61,7 +66,6 @@ class OptParseAdv:
 	# 							'prefix': --logging true
 	#							'field'	: --file=/some/data
 	#
-	# 
 	def add_suboptions(self, master, data):
 		if master not in self.opt_hash: self.opt_hash[master] = {}
 		
@@ -70,9 +74,6 @@ class OptParseAdv:
 			self.opt_hash[master][key][__ALIASES__] = [key]
 			self.opt_hash[master][key][__TYPE__] = value[1]
 			self.opt_hash[master][key][__DATAFIELD__] = value[0]
-
-		# print self.opt_hash
-		# if data[0] not in self.opt_hash[master]: self.opt_hash[master][data[0]] = (data[1], use)
 
 	# Create aliases for a master command that invoke the same
 	# functions as the actual master command.
@@ -87,16 +88,15 @@ class OptParseAdv:
 
 
 	# Allow a master command to bind to a slave field.
-	def add_master_field(self, master, slave):
-		self.opt_hash[master][__LONELY__] = slave
+	def set_master_field(self, master, slave):
+		self.opt_hash[master][__SLAVE__] = slave
 
 	# Added for Poke server handling.
 	def define_slaves(self, slaves):
 		if self.slaves == None: self.slaves = {}
-		for key, value in slaves:
-			if self.slaves[key] == None: self.slaves[key] = {}
+		for key, value in slaves.iteritems():
+			if key not in self.slaves: self.slaves[key] = {}
 			self.slaves[key] = value
-
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -140,7 +140,6 @@ class OptParseAdv:
 		content = (sys.args if (c == None) else c.split())
 		counter = 0
 		master_indices = []
-		cmd_tree = {}
 		focus = None
 
 		if self.debug: print "['%s']" % c, "==>", content
@@ -154,7 +153,8 @@ class OptParseAdv:
 
 		counter = 0
 		skipper = False
-		master_indices.append(len(content) - 1)
+		wait_for_slave = False
+		master_indices.append(len(content))
 		# print master_indices
 
 		# This loop iterates over the master level commands
@@ -165,53 +165,69 @@ class OptParseAdv:
 				data_transmit = {}
 				subs = []
 				sub_counter = 0
+				slave_field = None
+				has_slave = False
 
 				# This loop iterates over the sub-commands of several master commands.
 				#
 				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
-					# print index, master_indices[counter + 1], sub_counter
 					if sub_counter == 0:
 						focus = self.__alias_to_master(cmd)
-						cmd_tree[focus] = {}
+						if focus in self.opt_hash:
+							if self.opt_hash[focus][__SLAVE__]:
+								wait_for_slave = True
+								sub_counter += 1
+								continue
+
 					else:
-						# if "=" in cmd:
 						rgged = cmd.replace('=', '= ').split()
-						# print rgged
 
 						for sub_command in rgged:
 							if skipper: 
 								skipper = False
 								continue
+
 							if "=" in sub_command:
 								sub_command = sub_command.replace('=', '')
 								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
-								# print focus, sub_command, trans_sub_cmd
-								# print self.opt_hash[focus]
+
 								if trans_sub_cmd in self.opt_hash[focus]:
-									# print rgged
-									# print "'%s'" % rgged[1], "combined with", trans_sub_cmd
 									data_transmit[trans_sub_cmd] = rgged[1]
 									skipper = True
-									subs.append(trans_sub_cmd)
-									# print focus, "=>", rgged
+									if trans_sub_cmd not in subs: subs.append(trans_sub_cmd)
 							else:
+								if wait_for_slave:
+									has_slave = True
+									wait_for_slave = False
+									if sub_command in self.slaves:
+										slave_field = (sub_command, self.slaves[sub_command])
+									else:
+										print "CRITICAL ERROR!"
+									continue
+
 								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
-								if trans_sub_cmd == None: continue
-								# print trans_sub_cmd, focus
+								if trans_sub_cmd == None:
+									if sub_command in self.opt_hash:
+										if self.opt_hash[sub_command][__SLAVE__]:
+											# if self.debug: print "Waiting for slave field..."
+											wait_for_slave = True
+											continue
+
 
 								if trans_sub_cmd in self.opt_hash[focus]:
 									data_transmit[trans_sub_cmd] = True
+									if trans_sub_cmd not in subs: subs.append(trans_sub_cmd)
 
-									subs.append(trans_sub_cmd)
-								# print "THIS SHOULD NOT BE CALLED:", sub_command
 					sub_counter += 1
-				self.opt_hash[focus][__FUNCT__](focus, subs, data_transmit)
+				self.opt_hash[focus][__FUNCT__](focus, slave_field, subs, data_transmit)
 			counter += 1
 
 	def help_screen(self):
 		(width, height) = console.getTerminalSize()
-		print "Your terminal's width is: %d" % width
+		if self.debug: print "Your terminal's width is: %d" % width
 
+	def print_debug(self):
+		print self.opt_hash
 
 	def __alias_to_master(self, alias):
 		for master in self.opt_hash:
@@ -234,20 +250,29 @@ class OptParseAdv:
 #########################
 
 
+# [Master Command] [ Slave Field (if not None) ] [ List of Sub Commands ] [ Sub command data hash ]
+# 
+#
+def connect(master, slave, sub, data):
+	print master, slave, sub, data
 
-def connect(master, sub, data):
-	print "This is a connect to", sub, "with data", data
+def copy(master, slave, sub, data):
+	pass #print master, "This is a copy with", sub, "and", data
 
-def copy(master, sub, data):
-	print "This is a copy with", sub, "and", data
-
-p = OptParseAdv({'connect':connect, 'copy':copy})
+p = OptParseAdv({'connect':connect})
 # p.enable_debug()
-p.add_suboptions('connect', {'-X': (None, __VALUE__)})
-p.add_suboptions('copy', {'--file': (None, __FIELD__)})
 
-# p.sub_aliases('connect', {'-X': ['-X']})
-p.sub_aliases('copy', {'--file': ['-f']})
+p.set_master_field('connect', True)
 p.master_aliases('connect', ['c'])
 
-p.parse('copy --file=/path/to/file connect -X')
+p.define_slaves({'nas':'192.168.2.131'})
+
+p.add_suboptions('connect', {'-X': (None, __VALUE__), '--command': (None, __FIELD__)})
+# p.add_suboptions('copy', {'--file': (None, __FIELD__)})
+p.sub_aliases('connect', {'-X': ['-X'], '--command': ['-c']})
+# p.sub_aliases('copy', {'--file': ['-f']})
+
+
+# p.print_debug()
+
+p.parse('c nas')
