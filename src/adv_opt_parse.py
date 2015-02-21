@@ -1,29 +1,22 @@
-# Copyright (C) 2014 Katharina Sabel
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
+# =========================================================
+# Copyright: (c) 2015 Katharina Sabel
+# License  : LGPL 3.0 (See LICENSE)
+# Comment  : Main class and body of the advanced options 
+#			 parser. See test script for usage info.
+# =========================================================
 
 # Some imports
 import itertools
 import warnings
+import console
 import re
 
 # Some variables to be used.
 __VALUE__ = '__VALUE__'
 __PREFIX__ = '__PREFIX__'
 __FIELD__ = '__FIELD__'
+
+__LONELY__ = '__LONELY__'
 
 __ALIASES__ = '__alias__'
 __FUNCT__ = '__funct__'
@@ -128,30 +121,14 @@ class OptParseAdv:
 	def enable_debug(self):
 		self.debug = True
 
-	def alias_to_master(self, alias):
-		for master in self.opt_hash:
-			for alias_list in self.opt_hash[master][__ALIASES__]:
-				if alias in alias_list:
-					return master
-		return None
-
-	def alias_to_sub(self, master, alias):
-		for sub in self.opt_hash[master]:
-			if "__" not in sub:
-				if alias in self.opt_hash[master][sub][__ALIASES__]:
-					return sub
-		return None
-
-		return
-		for sub in self.opt_hash[master]:
-			for alias_list in self.opt_hash[master][sub][__ALIASES__]:
-				if alias in alias_list:
-					return sub
-
-
+	# Parse a string either from a method parameter or from a commandline
+	# argument. Calls master command functions with apropriate data attached
+	# to it.
+	#
 	def parse(self, c = None):
 		# \-+\w+=|\w+=
 		# content = re.sub('\-+\w+=|\w+=', '=', c).split()
+		# print self.opt_hash
 
 		content = (sys.args if (c == None) else c.split())
 		counter = 0
@@ -159,7 +136,7 @@ class OptParseAdv:
 		cmd_tree = {}
 		focus = None
 
-		if self.debug: print c, "==>", content
+		if self.debug: print "['%s']" % c, "==>", content
 
 		for item in content:
 			# print item
@@ -169,41 +146,96 @@ class OptParseAdv:
 			counter += 1
 
 		counter = 0
+		skipper = False
 		master_indices.append(len(content) - 1)
 		# print master_indices
+
+		# This loop iterates over the master level commands
+		# of the to-be-parsed string
 		for index in master_indices:
 			if (counter + 1) < len(master_indices):
 				# print (counter + 1), len(master_indices)
 				data_transmit = {}
 				subs = []
 				sub_counter = 0
+
+				# This loop iterates over the sub-commands of several master commands.
+				#
 				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
 					# print index, master_indices[counter + 1], sub_counter
 					if sub_counter == 0:
-						focus = self.alias_to_master(cmd)
+						focus = self.__alias_to_master(cmd)
 						cmd_tree[focus] = {}
 					else:
-						if "=" in cmd:
-							rgged = cmd.replace('=', ' ').split()
+						# if "=" in cmd:
+						rgged = cmd.replace('=', '= ').split()
+						# print rgged
 
-							for sub_command in rgged:
-								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
+						for sub_command in rgged:
+							if skipper: 
+								skipper = False
+								continue
+							if "=" in sub_command:
+								sub_command = sub_command.replace('=', '')
+								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
+								# print focus, sub_command, trans_sub_cmd
+								# print self.opt_hash[focus]
 								if trans_sub_cmd in self.opt_hash[focus]:
+									# print rgged
 									# print "'%s'" % rgged[1], "combined with", trans_sub_cmd
 									data_transmit[trans_sub_cmd] = rgged[1]
+									skipper = True
 									subs.append(trans_sub_cmd)
+									# print focus, "=>", rgged
+							else:
+								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
+								if trans_sub_cmd == None: continue
+								# print trans_sub_cmd, focus
 
-						else:
-							rgged = cmd.replace('=', ' ').split()
-							for sub_command in rgged:
-								trans_sub_cmd = self.alias_to_sub(focus, sub_command)
 								if trans_sub_cmd in self.opt_hash[focus]:
-									# print "'%s'" % rgged[1], "combined with", trans_sub_cmd
-									data_transmit[trans_sub_cmd] = rgged[1]
+									data_transmit[trans_sub_cmd] = True
 									subs.append(trans_sub_cmd)
+								# print "THIS SHOULD NOT BE CALLED:", sub_command
 					sub_counter += 1
 				self.opt_hash[focus][__FUNCT__](focus, subs, data_transmit)
 			else:
 				pass
 				# print content[index]
 			counter += 1
+
+	def help_screen(self):
+		(width, height) = console.getTerminalSize()
+		print "Your terminal's width is: %d" % width
+
+
+	def __alias_to_master(self, alias):
+		for master in self.opt_hash:
+			for alias_list in self.opt_hash[master][__ALIASES__]:
+				if alias in alias_list:
+					return master
+		return None
+
+	def __alias_to_sub(self, master, alias):
+		for sub in self.opt_hash[master]:
+			if "__" not in sub:
+				if alias in self.opt_hash[master][sub][__ALIASES__]:
+					return sub
+		return None
+
+
+def connect(master, sub, data):
+	print "This is a connect to", sub, "with data", data
+
+def copy(master, sub, data):
+	print "This is a copy with", sub, "and", data
+
+p = OptParseAdv({'connect':connect, 'copy':copy})
+# p.enable_debug()
+p.add_suboptions('connect', {'-X': (None, __VALUE__)})
+p.add_suboptions('copy', {'--file': (None, __FIELD__)})
+
+p.sub_aliases('connect', {'-X': ['-X']})
+p.sub_aliases('copy', {'--file': ['-f', "--file"]})
+p.master_aliases('connect', ['c'])
+
+p.parse('copy --file=/path/to/file connect -X')
