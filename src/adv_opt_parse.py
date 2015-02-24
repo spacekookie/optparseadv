@@ -18,7 +18,7 @@ __FIELD__ = '__FIELD__'
 
 # Indicates that a master command can have a 1 to 1 binding
 # to another parameter afterwards.
-__SLAVE__ = '__slave__'
+__BINDING__ = '__bondage__'
 
 # Values to be used in the options tree
 __ALIASES__ = '__alias__'
@@ -26,14 +26,24 @@ __FUNCT__ = '__funct__'
 __DATAFIELD__ = '__defdat__'
 __TYPE__ = '__type__'
 
+# Notes are used to describe commands
+__NOTE__ = '__note__'
+
+# Labels are used to sub-divide master/ sub commands
+__LABEL__ = '__label__'
+
 # Main class
 #
 class OptParseAdv:
 
 	def __init__(self, masters = None):
 		self.set_masters(masters)
-		self.slaves = None
+		self.container_name = None
+		self.slave_fields = None
 		self.debug = False
+
+	def set_container_name(self, name):
+		self.container_name = name
 
 	# Hash of master level commands. CAN contain a global function to determine actions of
 	# subcommands.
@@ -45,9 +55,10 @@ class OptParseAdv:
 		self.opt_hash = {}
 		for key, value in masters.iteritems():
 			self.opt_hash[key] = {}
-			self.opt_hash[key][__FUNCT__] = value
-			self.master_aliases(key, [])
-			self.set_master_field(key, False)
+			self.opt_hash[key][__FUNCT__] = value[0]
+			self.opt_hash[key][__NOTE__] = value[1]
+			self.set_master_aliases(key, [])
+			self.set_master_fields(key, False)
 
 	# Takes the master level command and a hash of data
 	# The hash of data needs to be formatted in the following sense:
@@ -81,22 +92,23 @@ class OptParseAdv:
 	# This can be used to shorten commands that user need to
 	# input (such as 'rails server' vs 'rails s' does it)
 	#
-	def master_aliases(self, master, aliases):
+	def set_master_aliases(self, master, aliases):
 		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
 		if master not in aliases: aliases.append(master)
 		self.opt_hash[master][__ALIASES__] = aliases
 
-
-	# Allow a master command to bind to a slave field.
-	def set_master_field(self, master, slave):
-		self.opt_hash[master][__SLAVE__] = slave
+	# Allow a master command to bind to a sub field.
+	def set_master_fields(self, master, fields):
+		self.opt_hash[master][__BINDING__] = fields
 
 	# Added for Poke server handling.
-	def define_slaves(self, slaves):
-		if self.slaves == None: self.slaves = {}
+	# And possibly some other stuff?
+	# 
+	def define_fields(self, slaves):
+		if self.slave_fields == None: self.slave_fields = {}
 		for key, value in slaves.iteritems():
-			if key not in self.slaves: self.slaves[key] = {}
-			self.slaves[key] = value
+			if key not in self.slave_fields: self.slave_fields[key] = {}
+			self.slave_fields[key] = value
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -128,6 +140,9 @@ class OptParseAdv:
 	def enable_debug(self):
 		self.debug = True
 
+	def print_tree(self):
+		if self.debug: print "[DEBUG]:", self.opt_hash
+
 	# Parse a string either from a method parameter or from a commandline
 	# argument. Calls master command functions with apropriate data attached
 	# to it.
@@ -142,7 +157,7 @@ class OptParseAdv:
 		master_indices = []
 		focus = None
 
-		if self.debug: print "['%s']" % c, "==>", content
+		if self.debug: print "[DEBUG]: ['%s']" % c, "==>", content
 
 		for item in content:
 			# print item
@@ -174,7 +189,7 @@ class OptParseAdv:
 					if sub_counter == 0:
 						focus = self.__alias_to_master(cmd)
 						if focus in self.opt_hash:
-							if self.opt_hash[focus][__SLAVE__]:
+							if self.opt_hash[focus][__BINDING__]:
 								wait_for_slave = True
 								sub_counter += 1
 								continue
@@ -199,8 +214,8 @@ class OptParseAdv:
 								if wait_for_slave:
 									has_slave = True
 									wait_for_slave = False
-									if sub_command in self.slaves:
-										slave_field = (sub_command, self.slaves[sub_command])
+									if sub_command in self.slave_fields:
+										slave_field = (sub_command, self.slave_fields[sub_command])
 									else:
 										print "CRITICAL ERROR!"
 									continue
@@ -208,7 +223,7 @@ class OptParseAdv:
 								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
 								if trans_sub_cmd == None:
 									if sub_command in self.opt_hash:
-										if self.opt_hash[sub_command][__SLAVE__]:
+										if self.opt_hash[sub_command][__BINDING__]:
 											# if self.debug: print "Waiting for slave field..."
 											wait_for_slave = True
 											continue
@@ -223,11 +238,39 @@ class OptParseAdv:
 			counter += 1
 
 	def help_screen(self):
+		_space_ = " "
+		_dspace_ = "  "
+
 		(width, height) = console.getTerminalSize()
-		if self.debug: print "Your terminal's width is: %d" % width
+		if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
+		if not self.container_name and self.debug: print "[DEBUG]: Container application name unknown!" ; self.container_name = "default"
+		if not self.opt_hash: print "Usage:", self.container_name
+		else: print "Usage:", self.container_name, "[options]"
+
+		print ""
+
+		print "Options:"
+		print _space_, "-v, --version\t\t", "Print the version of", self.container_name
+		print _space_, "-h, --help\t\t", "Print this help screen"
+
+		print "Commands:"
+		for key, value in self.opt_hash.iteritems():
+			print _space_, self.__clean_aliases(value[__ALIASES__]), "\t\t", value[__NOTE__]
 
 	def print_debug(self):
 		print self.opt_hash
+
+	def __clean_aliases(self, aliases):
+		string = ""
+
+		counter = 0
+		for alias in aliases:
+			counter += 1
+			string += alias
+			if counter < len(aliases): string += ", "
+			
+		return string
+
 
 	def __alias_to_master(self, alias):
 		for master in self.opt_hash:
@@ -242,37 +285,3 @@ class OptParseAdv:
 				if alias in self.opt_hash[master][sub][__ALIASES__]:
 					return sub
 		return None
-
-
-
-#########################
-#   TEST SCRIPT BELOW   #
-#########################
-
-
-# [Master Command] [ Slave Field (if not None) ] [ List of Sub Commands ] [ Sub command data hash ]
-# 
-#
-# def connect(master, slave, sub, data):
-# 	print master, slave, sub, data
-
-# def copy(master, slave, sub, data):
-# 	pass #print master, "This is a copy with", sub, "and", data
-
-# p = OptParseAdv({'connect':connect})
-# # p.enable_debug()
-
-# p.set_master_field('connect', True)
-# p.master_aliases('connect', ['c'])
-
-# p.define_slaves({'nas':'192.168.2.131'})
-
-# p.add_suboptions('connect', {'-X': (None, __VALUE__), '--command': (None, __FIELD__)})
-# # p.add_suboptions('copy', {'--file': (None, __FIELD__)})
-# p.sub_aliases('connect', {'-X': ['-X'], '--command': ['-c']})
-# # p.sub_aliases('copy', {'--file': ['-f']})
-
-
-# # p.print_debug()
-
-# p.parse('c nas -X')
