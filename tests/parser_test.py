@@ -11,21 +11,24 @@ sys.path.append('../src/')
 
 import adv_opt_parse as parser
 
-def connect(master, slave, sub, data):
-	print master, slave, sub, data
+def connect(master, fields, sub, data):
+	print master, fields, sub, data
 
-p = parser.OptParseAdv({'connect':(connect, "Connect to servers")})
+p = parser.OptParseAdv({'connect':(connect, "Connect to servers"), 'copy':(connect, "Copy files to a server")})
 p.set_container_name("Poke")
 # p.enable_debug()
 p.print_tree()
 
 # p.set_master_fields('connect', True)
 p.set_master_aliases('connect', ['c'])
+p.set_master_aliases('copy', ['cp'])
 # p.define_fields({'nas':'192.168.2.131'})
-# p.add_suboptions('connect', {'-X': (None, parser.__VALUE__), '--command': (None, parser.__FIELD__)})
-# p.sub_aliases('connect', {'-X': ['-X'], '--command': ['-c']})
+p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding for the current session (if not enabled by default)"), '--cmd': (None, parser.__FIELD__, "Push a command to a remote server")})
+p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
 
 p.help_screen()
+
+# poke connect serverA
 
 # p.parse('c nas -X')
 

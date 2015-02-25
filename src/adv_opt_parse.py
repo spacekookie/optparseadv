@@ -85,6 +85,7 @@ class OptParseAdv:
 			self.opt_hash[master][key][__ALIASES__] = [key]
 			self.opt_hash[master][key][__TYPE__] = value[1]
 			self.opt_hash[master][key][__DATAFIELD__] = value[0]
+			self.opt_hash[master][key][__NOTE__] = value[2]
 
 	# Create aliases for a master command that invoke the same
 	# functions as the actual master command.
@@ -132,7 +133,18 @@ class OptParseAdv:
 
 		for key, value in aliases.iteritems():
 			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
-			self.opt_hash[master][key][__ALIASES__] += value
+
+			self.opt_hash[master][key][__ALIASES__] = value + list(set(self.opt_hash[master][key][__ALIASES__]) - set(value))
+
+			
+			#for v in value:
+				#if v not in self.opt_hash[master][key][__ALIASES__]:
+			# self.opt_hash[master][key][__ALIASES__].extend(value)
+
+			# # print "This is some debugging", self.opt_hash[master][key][__ALIASES__], "LALA",  value
+			# if value not in self.opt_hash[master][key][__ALIASES__]:
+			# 	print "DON'T ACTUALLY ADD THIS!", self.opt_hash[master][key][__ALIASES__]
+			# self.opt_hash[master][key][__ALIASES__] += value
 
 	# Enables debug mode on the parser.
 	# Will for example output the parsed and translated/ chopped strings to the console.
@@ -237,28 +249,46 @@ class OptParseAdv:
 				self.opt_hash[focus][__FUNCT__](focus, slave_field, subs, data_transmit)
 			counter += 1
 
+	# Generates a help screen for the container appliction.
+	#
 	def help_screen(self):
-		_space_ = " "
-		_dspace_ = "  "
+		# %-15s 
 
-		(width, height) = console.getTerminalSize()
+		_s_ = " "
+		_ds_ = "   "
+		_dds_ = "      "
+		# print "%-5s" % "Usage: Poke [Options]"
+
 		if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
 		if not self.container_name and self.debug: print "[DEBUG]: Container application name unknown!" ; self.container_name = "default"
+
+
 		if not self.opt_hash: print "Usage:", self.container_name
 		else: print "Usage:", self.container_name, "[options]"
 
 		print ""
+		
+		if self.opt_hash: print _s_ + "General:"
+		print _ds_ + "%-20s %s" % ("-v, --version", "Print the version of"), "'%s'" % self.container_name
+		print _ds_ + "%-20s %s" % ("-h, --help", "Print this help screen")
 
-		print "Options:"
-		print _space_, "-v, --version\t\t", "Print the version of", self.container_name
-		print _space_, "-h, --help\t\t", "Print this help screen"
-
-		print "Commands:"
+		print ""
+		if self.opt_hash: print _s_ + "Commands:"
 		for key, value in self.opt_hash.iteritems():
-			print _space_, self.__clean_aliases(value[__ALIASES__]), "\t\t", value[__NOTE__]
+			print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
+			for k, v in self.opt_hash[key].iteritems():
+				if "__" not in k:
+					print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
+
 
 	def print_debug(self):
 		print self.opt_hash
+
+	def __spaces(self, count):
+		string = ""
+		for _ in range(count):
+			string += " "
+		return string
 
 	def __clean_aliases(self, aliases):
 		string = ""

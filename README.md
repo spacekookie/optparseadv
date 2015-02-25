@@ -11,8 +11,8 @@ It also adds support for chaining commands and options such as they are being ex
 
 	import adv_opt_parse as parse
 
-	def connect(master, sub, data):
-		print "This is a connect to", sub, "with data", data
+	def connect(master, fields, sub, data):
+		print master, fields, sub, data
 
 	def copy(master, sub, data):
 		print "This is a copy with", sub, "and", data
