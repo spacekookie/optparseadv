@@ -20,6 +20,13 @@ __FIELD__ = '__FIELD__'
 # to another parameter afterwards.
 __BINDING__ = '__bondage__'
 
+# Binds an outside function to the failsafe handler.
+# Without a bound function a default error message will be
+# printed instead.
+# => failsafe_function
+
+
+
 # Values to be used in the options tree
 __ALIASES__ = '__alias__'
 __FUNCT__ = '__funct__'
@@ -37,7 +44,8 @@ __LABEL__ = '__label__'
 class OptParseAdv:
 
 	def __init__(self, masters = None):
-		self.set_masters(masters)
+		self.__set_masters(masters)
+		self.failsafe_function = None
 		self.container_name = None
 		self.slave_fields = None
 		self.debug = False
@@ -49,7 +57,7 @@ class OptParseAdv:
 	# subcommands.
 	# (See docs).
 	#
-	def set_masters(self, masters):
+	def __set_masters(self, masters):
 		if masters == None: warnings.warn("Warning! You shouldn't init a parser without your master commands set!")
 		# self.masters = master
 		self.opt_hash = {}
@@ -101,6 +109,10 @@ class OptParseAdv:
 	# Allow a master command to bind to a sub field.
 	def set_master_fields(self, master, fields):
 		self.opt_hash[master][__BINDING__] = fields
+
+
+	def register_failsafe(self, funct):
+		self.failsafe_function = funct
 
 	# Added for Poke server handling.
 	# And possibly some other stuff?
@@ -160,19 +172,12 @@ class OptParseAdv:
 	# to it.
 	#
 	def parse(self, c = None):
-		# \-+\w+=|\w+=
-		# content = re.sub('\-+\w+=|\w+=', '=', c).split()
-		# print self.opt_hash
-
 		content = (sys.args if (c == None) else c.split())
 		counter = 0
 		master_indices = []
 		focus = None
 
-		if self.debug: print "[DEBUG]: ['%s']" % c, "==>", content
-
 		for item in content:
-			# print item
 			for master in self.opt_hash:
 				if item in self.opt_hash[master][__ALIASES__]:
 					master_indices.append(counter)
@@ -198,8 +203,10 @@ class OptParseAdv:
 				# This loop iterates over the sub-commands of several master commands.
 				#
 				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
+					# print sub_counter
 					if sub_counter == 0:
 						focus = self.__alias_to_master(cmd)
+						# print focus, cmd
 						if focus in self.opt_hash:
 							if self.opt_hash[focus][__BINDING__]:
 								wait_for_slave = True
@@ -210,6 +217,7 @@ class OptParseAdv:
 						rgged = cmd.replace('=', '= ').split()
 
 						for sub_command in rgged:
+							# print "Sub command:", sub_command
 							if skipper: 
 								skipper = False
 								continue
@@ -229,10 +237,15 @@ class OptParseAdv:
 									if sub_command in self.slave_fields:
 										slave_field = (sub_command, self.slave_fields[sub_command])
 									else:
-										print "CRITICAL ERROR!"
+										if self.failsafe_function == None:
+											print "An Error occured while parsing arguments."
+										else:
+											self.failsafe_function(cmd, 'Unknown Arguments')
+										return
 									continue
 
 								trans_sub_cmd = self.__alias_to_sub(focus, sub_command)
+
 								if trans_sub_cmd == None:
 									if sub_command in self.opt_hash:
 										if self.opt_hash[sub_command][__BINDING__]:
@@ -240,14 +253,18 @@ class OptParseAdv:
 											wait_for_slave = True
 											continue
 
-
 								if trans_sub_cmd in self.opt_hash[focus]:
 									data_transmit[trans_sub_cmd] = True
 									if trans_sub_cmd not in subs: subs.append(trans_sub_cmd)
 
 					sub_counter += 1
 				self.opt_hash[focus][__FUNCT__](focus, slave_field, subs, data_transmit)
+				return
 			counter += 1
+		if self.failsafe_function == None:
+			print "Error! No arguments recognised."
+		else:
+			self.failsafe_function(content, 'Invalid Options')
 
 	# Generates a help screen for the container appliction.
 	#
@@ -280,6 +297,9 @@ class OptParseAdv:
 				if "__" not in k:
 					print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
 
+	def shit(self):
+		for key, value in self.opt_hash.iteritems():
+			print key
 
 	def print_debug(self):
 		print self.opt_hash
@@ -292,7 +312,6 @@ class OptParseAdv:
 
 	def __clean_aliases(self, aliases):
 		string = ""
-
 		counter = 0
 		for alias in aliases:
 			counter += 1
@@ -303,15 +322,15 @@ class OptParseAdv:
 
 
 	def __alias_to_master(self, alias):
-		for master in self.opt_hash:
-			for alias_list in self.opt_hash[master][__ALIASES__]:
-				if alias in alias_list:
-					return master
+		for key, value in self.opt_hash.iteritems():
+			for map_alias in value[__ALIASES__]:
+				if alias == map_alias:
+					return key
 		return None
 
 	def __alias_to_sub(self, master, alias):
-		for sub in self.opt_hash[master]:
-			if "__" not in sub:
-				if alias in self.opt_hash[master][sub][__ALIASES__]:
-					return sub
+		for key, value in self.opt_hash[master].iteritems():
+			if "__" not in key:
+				if alias in value[__ALIASES__]:
+					return key
 		return None
