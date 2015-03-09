@@ -5,5 +5,5 @@
 #
 # =========================================================
 
-import pkg_resources
-__VERSION__ = pkg_resources.require("advoptparse")[0].version
+# import pkg_resources
+# __VERSION__ = pkg_resources.require("advoptparse")[0].version

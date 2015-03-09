@@ -9,8 +9,10 @@
 from setuptools import setup, find_packages
 import os
 
-vf = open(os.path.join('res', 'VERSION'))
-__version__ = vf.read().strip()
+execfile('src/version.py')
+
+# vf = open(os.path.join('src', 'VERSION'))
+# __version__ = vf.read().strip()
 
 setup(
     name='advoptparse',
@@ -20,7 +22,7 @@ setup(
     author='Katharina Sabel',
     author_email='katharina.sabel@2rsoftworks.de',
     description='Advanced python commandline argument parser',
-    packages=['src', 'res'],
+    packages=['src'],
     include_package_data=True,
     platforms='any',
     zip_safe=False,
