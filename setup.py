@@ -20,7 +20,7 @@ setup(
     author='Katharina Sabel',
     author_email='katharina.sabel@2rsoftworks.de',
     description='Advanced python commandline argument parser',
-    packages=['src'],
+    packages=['src', 'res'],
     include_package_data=True,
     platforms='any',
     zip_safe=False,
