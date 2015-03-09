@@ -1,6 +1,6 @@
 # =========================================================
 # Copyright: (c) 2015 Katharina Sabel
-# License  : LGPL 3.0 (See LICENSE)
+# License  : GPL 2.0 (See LICENSE)
 # Comment  : Testing script for options parser
 #
 # =========================================================

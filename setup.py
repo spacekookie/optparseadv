@@ -1,18 +1,26 @@
+#!/usr/bin/env python
+# =========================================================
+# Copyright: (c) 2015 Katharina Sabel
+# License  : GPL 2.0 (See LICENSE)
+# Comment  : Setup script for the library.
+#
+# =========================================================
+
 from setuptools import setup, find_packages
 
+vf = open(os.path.join('res', 'VERSION'))
+__version__ = vf.read().strip()
+
 setup(
-    name='pyoptparse',
-    version="0.1",
+    name='advoptparse',
+    version=__version__,
     url='http://github.com/SpaceKookie/OptionsPie/',
     license='GNU Public Liense 2.0',
     author='Katharina Sabel',
     author_email='katharina.sabel@2rsoftworks.de',
-    description='Python commandline argument parser',
-    packages=['src'],
+    description='Advanced python commandline argument parser',
+    packages=['lib'],
     include_package_data=True,
     platforms='any',
     zip_safe=False,
-    # package_data={
-    #     'poke': ['controllers/**']
-    # }
 )
