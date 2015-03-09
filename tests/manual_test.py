@@ -29,11 +29,17 @@ p.set_master_fields('connect', True)
 # p.set_master_fields('copy', True)
 
 p.set_master_aliases('connect', ['c'])
-# p.set_master_aliases('copy', ['cp'])
+p.set_master_aliases('copy', ['cp'])
 
-p.define_fields({'nas':('192.168.2.131', 'Local data and build server')})
+p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
 p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding for the current session (if not enabled by default)"), '--cmd': (None, parser.__FIELD__, "Push a command to a remote server")})
+
+p.add_suboptions('copy', {'--file': (None, parser.__FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
+
+
 p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
+p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
+# 'copy', {'-f': ['--file'], '-t': ['--target']
 
 p.print_tree()
 p.help_screen()
