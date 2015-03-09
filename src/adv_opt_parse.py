@@ -11,6 +11,20 @@ import warnings
 import console
 import re
 
+# Colour class to make output more pretty.
+#
+class Colour:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
 # Some variables to be used.
 __VALUE__ = '__VALUE__'
 __PREFIX__ = '__PREFIX__'
@@ -37,19 +51,29 @@ __NOTE__ = '__note__'
 # Labels are used to sub-divide master/ sub commands
 __LABEL__ = '__label__'
 
-# Main class
+# Main class for the python advanced options parser.
 #
-class OptParseAdv:
+class AdvOptParse:
 
 	def __init__(self, masters = None):
 		self.__set_masters(masters)
 		self.failsafe_function = None
 		self.container_name = None
+		self.fields_name = "Fields"
 		self.slave_fields = None
 		self.debug = False
 
+	# Set the name of the container application that's used in the help screen
+	#
 	def set_container_name(self, name):
 		self.container_name = name
+
+
+	# Set the name of the fields for the help screen
+	#
+	def set_fields_name(self, name):
+		self.fields_name = name
+
 
 	# Hash of master level commands. CAN contain a global function to determine actions of
 	# subcommands.
@@ -112,12 +136,18 @@ class OptParseAdv:
 	def register_failsafe(self, funct):
 		self.failsafe_function = funct
 
-	# Added for Poke server handling.
-	# And possibly some other stuff?
-	# 
-	def define_fields(self, slaves):
+	# Define fields for a command that gets handled above sub commands.
+	# Slave fields should be a hash with a string key and tuple value attached
+	# to it. A one tuple can also be replaced with the actual information.
+	# So:
+	# 'field' => ('information', "Description of the field")
+	# and
+	# 'field' => 'information'
+	# are both valid field types.
+	#
+	def define_fields(self, fields):
 		if self.slave_fields == None: self.slave_fields = {}
-		for key, value in slaves.iteritems():
+		for key, value in fields.iteritems():
 			if key not in self.slave_fields: self.slave_fields[key] = {}
 			self.slave_fields[key] = value
 
@@ -294,6 +324,16 @@ class OptParseAdv:
 			for k, v in self.opt_hash[key].iteritems():
 				if "__" not in k:
 					print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
+
+		print ""
+		if self.slave_fields: print _s_ + self.fields_name + ":"
+		for key, value in self.slave_fields.iteritems():
+			description = str(value)[1:-1].replace("\'", "")
+
+			# for item in value:
+			# 	description += item  + ", "
+			print _ds_ + "%-20s %s" % (key, description)
+			# print _dds_ + key + "%-22s %s" + description 
 
 	def shit(self):
 		for key, value in self.opt_hash.iteritems():

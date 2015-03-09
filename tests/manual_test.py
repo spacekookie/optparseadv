@@ -17,8 +17,9 @@ def connect(master, fields, sub, data):
 def faulty(value, error):
 	print value, error
 
-p = parser.OptParseAdv({'connect':(connect, "Connect to servers"), 'copy':(connect, "Copy files to a server")})
+p = parser.AdvOptParse({'connect':(connect, "Connect to servers"), 'copy':(connect, "Copy files to a server")})
 p.set_container_name("Poke")
+p.set_fields_name("Servers")
 p.register_failsafe(faulty)
 # p.enable_debug()
 
@@ -30,15 +31,15 @@ p.set_master_fields('connect', True)
 p.set_master_aliases('connect', ['c'])
 # p.set_master_aliases('copy', ['cp'])
 
-p.define_fields({'nas':'192.168.2.131'})
+p.define_fields({'nas':('192.168.2.131', 'Local data and build server')})
 p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding for the current session (if not enabled by default)"), '--cmd': (None, parser.__FIELD__, "Push a command to a remote server")})
 p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
 
 p.print_tree()
-# p.help_screen()
+p.help_screen()
 # p.shit()
 
-p.parse('connect nas -X')
+# p.parse('connect nas -X')
 
 #########################
 #   TEST SCRIPT BELOW   #
