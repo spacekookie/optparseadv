@@ -40,3 +40,6 @@ p.master_aliases('copy', ['cp'])
 
 p.parse('connect cp -f=/foo/bar.poo -t=/foo')
 ```
+
+## Support
+If you find any bugs with this library or have issues using it, please report them on the github issue tracker. Additonally, if you want to get in contact with me, don't hesitate to e-mail me at katharina.sabel@2rsoftworks.de
