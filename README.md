@@ -1,13 +1,28 @@
 Python options parser
 ==========
 
-This is a library that provices enhanced functionality to python by adding a parser for commandline arguments, including but not limited to options (e.g. '-v'), data fields (e.g. 'file=/path/to/file') as well as sub-command fields ands scopes (e.g.'git clone')
+This is a library that provices enhanced functionality to python commandline argument handling, including but not limited to options (e.g. '-v'), data fields (e.g. 'file=/path/to/file') as well as chainable sub-commands and scopes (e.g. git commit -m "Message" push) 
 
-It also adds support for chaining commands and options such as they are being executed sequentially. (e.g. 'git add * commit -m "Some message" push)
+AdvOptParse is compatible with Python 2.7 and above.
+
+## How to install
+When installing AdvOptParse you have two options. The first one is via pip (or easy_install):
+```
+$ sudo pip install advoptparse
+```
+
+Alternatively you can grab a current source copy of the library via this repository
+```
+$ git clone -b develop https://github.com/SpaceKookie/AdvOptParse.git
+$ cd AdvOptParse/
+$ sudo python setup.py install
+```
+The latter will give you access to the latest development snapshot of the AdvOptParse library.
 
 ## How to use
 
-```python
+```
+python
 
 	import adv_opt_parse as parse
 
@@ -23,5 +38,4 @@ It also adds support for chaining commands and options such as they are being ex
 	p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 	p.master_aliases('copy', ['cp'])
 	p.parse('connect cp -f=/foo/bar.poo -t=/foo')
-
 ```
