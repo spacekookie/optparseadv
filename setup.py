@@ -7,6 +7,7 @@
 # =========================================================
 
 from setuptools import setup, find_packages
+import os
 
 vf = open(os.path.join('res', 'VERSION'))
 __version__ = vf.read().strip()
@@ -19,7 +20,7 @@ setup(
     author='Katharina Sabel',
     author_email='katharina.sabel@2rsoftworks.de',
     description='Advanced python commandline argument parser',
-    packages=['lib'],
+    packages=['src'],
     include_package_data=True,
     platforms='any',
     zip_safe=False,
