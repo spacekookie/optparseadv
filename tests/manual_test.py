@@ -23,8 +23,6 @@ p.set_fields_name("Servers")
 p.register_failsafe(faulty)
 # p.enable_debug()
 
-
-
 p.set_master_fields('connect', True)
 # p.set_master_fields('copy', True)
 
