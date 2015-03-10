@@ -104,12 +104,13 @@ class AdvOptParse:
 	# it would call the function: func('clone', '-L', '2') in the specified container class/ env.
 	#
 	# 'use' parameters include:	'value'	: -v
-	# 							'prefix': --logging true
+	# 		(WORK IN PROGRESS)	'prefix': --logging true
 	#							'field'	: --file=/some/data
 	#
 	def add_suboptions(self, master, data):
+		if value[1] == __PREFIX__: warnings.warn("Not implemented yet") ; return
+
 		if master not in self.opt_hash: self.opt_hash[master] = {}
-		
 		for key, value in data.iteritems():
 			if key not in self.opt_hash[master]: self.opt_hash[master][key] = {}
 			self.opt_hash[master][key][__ALIASES__] = [key]
@@ -173,18 +174,7 @@ class AdvOptParse:
 
 		for key, value in aliases.iteritems():
 			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
-
 			self.opt_hash[master][key][__ALIASES__] = value + list(set(self.opt_hash[master][key][__ALIASES__]) - set(value))
-
-			
-			#for v in value:
-				#if v not in self.opt_hash[master][key][__ALIASES__]:
-			# self.opt_hash[master][key][__ALIASES__].extend(value)
-
-			# # print "This is some debugging", self.opt_hash[master][key][__ALIASES__], "LALA",  value
-			# if value not in self.opt_hash[master][key][__ALIASES__]:
-			# 	print "DON'T ACTUALLY ADD THIS!", self.opt_hash[master][key][__ALIASES__]
-			# self.opt_hash[master][key][__ALIASES__] += value
 
 	# Enables debug mode on the parser.
 	# Will for example output the parsed and translated/ chopped strings to the console.
@@ -192,6 +182,8 @@ class AdvOptParse:
 	def enable_debug(self):
 		self.debug = True
 
+	# Print tree of options hashes and bound slave fields to master commands
+	#
 	def print_tree(self):
 		if self.debug: print "[DEBUG]:", self.opt_hash
 
@@ -297,8 +289,6 @@ class AdvOptParse:
 	# Generates a help screen for the container appliction.
 	#
 	def help_screen(self):
-		# %-15s 
-
 		_s_ = " "
 		_ds_ = "   "
 		_dds_ = "      "
@@ -329,24 +319,8 @@ class AdvOptParse:
 		if self.slave_fields: print _s_ + self.fields_name + ":"
 		for key, value in self.slave_fields.iteritems():
 			description = str(value)[1:-1].replace("\'", "")
-
-			# for item in value:
-			# 	description += item  + ", "
 			print _ds_ + "%-20s %s" % (key, description)
-			# print _dds_ + key + "%-22s %s" + description 
-
-	def shit(self):
-		for key, value in self.opt_hash.iteritems():
-			print key
-
-	def print_debug(self):
-		print self.opt_hash
-
-	def __spaces(self, count):
-		string = ""
-		for _ in range(count):
-			string += " "
-		return string
+		print ""
 
 	def __clean_aliases(self, aliases):
 		string = ""
@@ -355,9 +329,7 @@ class AdvOptParse:
 			counter += 1
 			string += alias
 			if counter < len(aliases): string += ", "
-			
 		return string
-
 
 	def __alias_to_master(self, alias):
 		for key, value in self.opt_hash.iteritems():
