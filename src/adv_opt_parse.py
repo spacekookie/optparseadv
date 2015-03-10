@@ -34,6 +34,15 @@ __FIELD__ = '__FIELD__'
 # to another parameter afterwards.
 __BINDING__ = '__bondage__'
 
+# Help handle binding
+__HELPER__ = '__helper__'
+
+# Version handle binding
+__VERSION__ = '__version__'
+
+# Helper to indicate that a boolean is being stored
+__ACTIVE__ = '__kinkysex__'
+
 # Binds an outside function to the failsafe handler.
 # Without a bound function a default error message will be
 # printed instead.
@@ -90,6 +99,10 @@ class AdvOptParse:
 			self.set_master_aliases(key, [])
 			self.set_master_fields(key, False)
 
+		# Setup the version and helper handle. By default '-h' and '--version' are set to 'True'
+		self.opt_hash[__HELPER__] = { __ALIASES__: ['-h'], __ACTIVE__: True}
+		self.opt_hash[__VERSION__] = { __ALIASES__: ['--version'], __ACTIVE__: True}
+
 	# Takes the master level command and a hash of data
 	# The hash of data needs to be formatted in the following sense:
 	# {'X': funct} where X is any variable, option or command INCLUDING DASHES AND DOUBLE DASHES you want
@@ -108,10 +121,9 @@ class AdvOptParse:
 	#							'field'	: --file=/some/data
 	#
 	def add_suboptions(self, master, data):
-		if value[1] == __PREFIX__: warnings.warn("Not implemented yet") ; return
-
 		if master not in self.opt_hash: self.opt_hash[master] = {}
 		for key, value in data.iteritems():
+			if value[1] == __PREFIX__: warnings.warn("Not implemented yet") ; return
 			if key not in self.opt_hash[master]: self.opt_hash[master][key] = {}
 			self.opt_hash[master][key][__ALIASES__] = [key]
 			self.opt_hash[master][key][__TYPE__] = value[1]
@@ -133,9 +145,35 @@ class AdvOptParse:
 	def set_master_fields(self, master, fields):
 		self.opt_hash[master][__BINDING__] = fields
 
-
+	# Define a failsafe function to handle failed parsing attempts
+	# If no function was registered default logging to STOUT will be used
+	#
 	def register_failsafe(self, funct):
 		self.failsafe_function = funct
+
+	# Defines the helper handles that are used to print the help screen.
+	#
+	def define_help_handle(self, helpers):
+		self.opt_hash[__HELPER__][__ALIASES__] = helpers
+
+	# Enable the helper handle (and list it in the helper screen)
+	#
+	def set_help_handle(self, boolean):
+		self.opt_hash[__HELPER__][__ACTIVE__] = boolean
+
+	# Defines the version handles that are used to print the version number of .
+	#
+	def define_version_handle(self, versions):
+		self.opt_hash[__VERSION__][__ALIASES__] = versions
+
+	# Enable the version handle (and list it in the helper screen)
+	#
+	def set_version_handle(self, boolean):
+		self.opt_hash[__VERSION__][__ACTIVE__] = boolean
+
+	# Define a version string to be printed in the help screen and/or version handle
+	def define_container_version(self, version):
+		self.container_version = version
 
 	# Define fields for a command that gets handled above sub commands.
 	# Slave fields should be a hash with a string key and tuple value attached
@@ -151,6 +189,21 @@ class AdvOptParse:
 		for key, value in fields.iteritems():
 			if key not in self.slave_fields: self.slave_fields[key] = {}
 			self.slave_fields[key] = value
+
+	# Key is the name of a field.
+	# Value is a tuple of information to be passed down to a callback function when the field is
+	# triggered.
+	# A one tuple can also be replaced with the actual information
+	#
+	# So:
+	# 'key' => ('information', "Description of the field")
+	# and
+	# 'key' => 'information'
+	# are both valid field types.
+	#
+	def add_field(self, key, value):
+		if self.slave_fields == None: self.slave_fields = {}
+		self.slave_fields[key] = value
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -199,8 +252,9 @@ class AdvOptParse:
 
 		for item in content:
 			for master in self.opt_hash:
-				if item in self.opt_hash[master][__ALIASES__]:
-					master_indices.append(counter)
+				if "__" not in master:
+					if item in self.opt_hash[master][__ALIASES__]:
+						master_indices.append(counter)
 			counter += 1
 
 		counter = 0
@@ -294,7 +348,7 @@ class AdvOptParse:
 		_dds_ = "      "
 		# print "%-5s" % "Usage: Poke [Options]"
 
-		if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
+		# if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
 		if not self.container_name and self.debug: print "[DEBUG]: Container application name unknown!" ; self.container_name = "default"
 
 
@@ -304,23 +358,23 @@ class AdvOptParse:
 		print ""
 		
 		if self.opt_hash: print _s_ + "General:"
-		print _ds_ + "%-20s %s" % ("-v, --version", "Print the version of"), "'%s'" % self.container_name
-		print _ds_ + "%-20s %s" % ("-h, --help", "Print this help screen")
+		print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__VERSION__][__ALIASES__]), "Print the version of"), "'%s'" % self.container_name
+		print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__HELPER__][__ALIASES__]), "Print this help screen")
 
 		print ""
 		if self.opt_hash: print _s_ + "Commands:"
 		for key, value in self.opt_hash.iteritems():
-			print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
-			for k, v in self.opt_hash[key].iteritems():
-				if "__" not in k:
-					print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
+			if "__" not in key:
+				print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
+				for k, v in self.opt_hash[key].iteritems():
+					if "__" not in k:
+						print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
 
 		print ""
 		if self.slave_fields: print _s_ + self.fields_name + ":"
 		for key, value in self.slave_fields.iteritems():
 			description = str(value)[1:-1].replace("\'", "")
 			print _ds_ + "%-20s %s" % (key, description)
-		print ""
 
 	def __clean_aliases(self, aliases):
 		string = ""
@@ -333,9 +387,10 @@ class AdvOptParse:
 
 	def __alias_to_master(self, alias):
 		for key, value in self.opt_hash.iteritems():
-			for map_alias in value[__ALIASES__]:
-				if alias == map_alias:
-					return key
+			if "__" not in key:
+				for map_alias in value[__ALIASES__]:
+					if alias == map_alias:
+						return key
 		return None
 
 	def __alias_to_sub(self, master, alias):

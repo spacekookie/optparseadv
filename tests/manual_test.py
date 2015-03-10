@@ -21,10 +21,10 @@ p = parser.AdvOptParse({'connect':(connect, "Connect to servers"), 'copy':(conne
 p.set_container_name("Poke")
 p.set_fields_name("Servers")
 p.register_failsafe(faulty)
-# p.enable_debug()
+p.enable_debug()
 
 p.set_master_fields('connect', True)
-# p.set_master_fields('copy', True)
+p.set_master_fields('copy', True)
 
 p.set_master_aliases('connect', ['c'])
 p.set_master_aliases('copy', ['cp'])
@@ -34,16 +34,14 @@ p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding
 
 p.add_suboptions('copy', {'--file': (None, parser.__FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
 
-
 p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
 p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 # 'copy', {'-f': ['--file'], '-t': ['--target']
 
-p.print_tree()
+# p.print_tree()
 p.help_screen()
-# p.shit()
 
-# p.parse('connect nas -X')
+#p.parse('-h')
 
 #########################
 #   TEST SCRIPT BELOW   #
