@@ -7,7 +7,7 @@
 
 # Prepare application path
 import sys
-sys.path.append('../src/')
+sys.path.append('../advoptarse/')
 
 import adv_opt_parse as parser
 

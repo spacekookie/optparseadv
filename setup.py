@@ -8,17 +8,14 @@
 
 from setuptools import setup, find_packages
 
-execfile('src/version.py')
-setup(
-    name='advoptparse',
-    version=__version__,
-    url='http://github.com/SpaceKookie/OptionsPie/',
-    license='GNU Public Liense 2.0',
-    author='Katharina Sabel',
-    author_email='katharina.sabel@2rsoftworks.de',
-    description='Advanced python commandline argument parser',
-    packages=['src'],
-    include_package_data=True,
-    platforms='any',
-    zip_safe=True,
-)
+execfile('advoptparse/version.py')
+
+setup(name='AdvOptParse',
+      license='GNU General Public Liense 2.0',
+      version=__version__,
+      description='Advanced python commandline argument parser',
+      author='Katharina Sabel',
+      author_email='katharina.sabel@2rsoftworks.de',
+      url='http://github.com/SpaceKookie/AdvOptParse/',
+      packages=['advoptparse'],
+     )

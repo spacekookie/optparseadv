@@ -7,3 +7,9 @@
 
 # import pkg_resources
 # __VERSION__ = pkg_resources.require("advoptparse")[0].version
+
+# __all__ = ['parser', 'version']
+
+import parser
+import version
+import console
