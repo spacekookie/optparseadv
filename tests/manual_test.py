@@ -9,7 +9,7 @@
 import sys
 sys.path.append('../advoptarse/')
 
-import adv_opt_parse as parser
+from advoptparse import parser as parser
 
 def connect(master, fields, sub, data):
 	print master, fields, sub, data
