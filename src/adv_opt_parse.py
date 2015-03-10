@@ -171,8 +171,8 @@ class AdvOptParse:
 	def set_version_handle(self, boolean):
 		self.opt_hash[__VERSION__][__ACTIVE__] = boolean
 
-	# Define a version string to be printed in the help screen and/or version handle
-	def define_container_version(self, version):
+	# Set a version string to be printed in the help screen and/or version handle
+	def set_container_version(self, version):
 		self.container_version = version
 
 	# Define fields for a command that gets handled above sub commands.
@@ -245,6 +245,16 @@ class AdvOptParse:
 	# to it.
 	#
 	def parse(self, c = None):
+		for alias in self.opt_hash[__HELPER__][__ALIASES__]:
+			if c == alias:
+				self.help_screen()
+				return
+		
+		for alias in self.opt_hash[__VERSION__][__ALIASES__]:
+			if c == alias:
+				print self.container_version
+				return
+
 		content = (sys.args if (c == None) else c.split())
 		counter = 0
 		master_indices = []
@@ -340,6 +350,9 @@ class AdvOptParse:
 		else:
 			self.failsafe_function(content, 'Invalid Options')
 
+		# Return false if nothing was handled for container application to be able to
+		raise Warning
+
 	# Generates a help screen for the container appliction.
 	#
 	def help_screen(self):
@@ -358,10 +371,14 @@ class AdvOptParse:
 		print ""
 		
 		if self.opt_hash: print _s_ + "General:"
-		print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__VERSION__][__ALIASES__]), "Print the version of"), "'%s'" % self.container_name
-		print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__HELPER__][__ALIASES__]), "Print this help screen")
+		if self.opt_hash[__VERSION__][__ACTIVE__]:
+			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__VERSION__][__ALIASES__]), "Print the version of"), "'%s'" % self.container_name
+		
+		if self.opt_hash[__HELPER__][__ACTIVE__]:
+			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__HELPER__][__ALIASES__]), "Print this help screen")
 
 		print ""
+
 		if self.opt_hash: print _s_ + "Commands:"
 		for key, value in self.opt_hash.iteritems():
 			if "__" not in key:
@@ -371,6 +388,7 @@ class AdvOptParse:
 						print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
 
 		print ""
+
 		if self.slave_fields: print _s_ + self.fields_name + ":"
 		for key, value in self.slave_fields.iteritems():
 			description = str(value)[1:-1].replace("\'", "")

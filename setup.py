@@ -20,5 +20,5 @@ setup(
     packages=['src'],
     include_package_data=True,
     platforms='any',
-    zip_safe=False,
+    zip_safe=True,
 )

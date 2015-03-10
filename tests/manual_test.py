@@ -21,6 +21,8 @@ p = parser.AdvOptParse({'connect':(connect, "Connect to servers"), 'copy':(conne
 p.set_container_name("Poke")
 p.set_fields_name("Servers")
 p.register_failsafe(faulty)
+p.set_container_version("0.6.1a")
+p.define_version_handle(['-v'])
 p.enable_debug()
 
 p.set_master_fields('connect', True)
@@ -39,9 +41,12 @@ p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 # 'copy', {'-f': ['--file'], '-t': ['--target']
 
 # p.print_tree()
-p.help_screen()
+# p.help_screen()
 
-#p.parse('-h')
+try:
+	p.parse('-v')
+except:
+	pass
 
 #########################
 #   TEST SCRIPT BELOW   #
