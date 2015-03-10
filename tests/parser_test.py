@@ -5,26 +5,34 @@
 #
 # =========================================================
 
-import sys
-import advoptparse
+from advoptparse import parser as p
 
-# import sys
-# import unittest
+# This function will be called when input is parsed correctly
+def handler(master, field, sub, data):
+	print master, field, sub, data
 
-# sys.path.append('../src/')
-# import adv_opt_parse as parser
+parser = p.AdvOptParse({'func': (handler, 'Description of a function')})
 
-# def fun(x):
-# 	return x + 1
+# Set up some basic data about the container application
+p.set_container_name("app")
+p.set_container_version("1.0")
+p.define_version_handle(['-ver'])
 
-# class ParserTest(unittest.TestCase):
+# Make the 'function' argument accept fields
+p.set_master_fields('func', True)
 
-# 	def test(self):
-# 		# p = parser.OptParseAdv({'connect':(parity, 'Connect to servers')})
-# 		# p.set_master_fields('connect', True)
-# 		# p.set_master_aliases('connect', ['c'])
-# 		# p.define_fields({'nas':'192.168.2.131'})
-# 		# p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding")})
-		
-# 		# p.parse("connect nas -X")
-# 		self.assertEqual(3, 3)
+# Give it an alias to make typing it more convenient for users
+p.set_master_aliases('func', ['func'])
+
+# Give the master command some sub argument fields to be handled
+p.add_suboptions('func', {'-k': (None, p.__VALUE__, "Some description")})
+p.add_suboptions('func', {'--file': (None, p.__FIELD__, "Use parameters")})
+
+
+# Parse something, envelopped in a try-except block
+# to handle failures to container applications
+try:
+	p.parse('f -k --file=some/file.txt')
+except:
+	print "Input not valid"
+	parser.help_screen()
