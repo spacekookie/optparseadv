@@ -7,13 +7,8 @@
 # =========================================================
 
 from setuptools import setup, find_packages
-import os
 
 execfile('src/version.py')
-
-# vf = open(os.path.join('src', 'VERSION'))
-# __version__ = vf.read().strip()
-
 setup(
     name='advoptparse',
     version=__version__,

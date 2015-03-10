@@ -6,22 +6,25 @@
 # =========================================================
 
 import sys
-import unittest
+import advoptparse
 
-sys.path.append('../src/')
-import adv_opt_parse as parser
+# import sys
+# import unittest
 
-def fun(x):
-	return x + 1
+# sys.path.append('../src/')
+# import adv_opt_parse as parser
 
-class ParserTest(unittest.TestCase):
+# def fun(x):
+# 	return x + 1
 
-	def test(self):
-		# p = parser.OptParseAdv({'connect':(parity, 'Connect to servers')})
-		# p.set_master_fields('connect', True)
-		# p.set_master_aliases('connect', ['c'])
-		# p.define_fields({'nas':'192.168.2.131'})
-		# p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding")})
+# class ParserTest(unittest.TestCase):
+
+# 	def test(self):
+# 		# p = parser.OptParseAdv({'connect':(parity, 'Connect to servers')})
+# 		# p.set_master_fields('connect', True)
+# 		# p.set_master_aliases('connect', ['c'])
+# 		# p.define_fields({'nas':'192.168.2.131'})
+# 		# p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding")})
 		
-		# p.parse("connect nas -X")
-		self.assertEqual(3, 3)
+# 		# p.parse("connect nas -X")
+# 		self.assertEqual(3, 3)
