@@ -1,3 +1,10 @@
+# =========================================================
+# Copyright: (c) 2015 Katharina Sabel
+# License  : GPL 2.0 (See LICENSE)
+# Comment  : Console utility. Not sure what will happen with this.
+#
+# =========================================================
+
 def getTerminalSize():
     import os
     env = os.environ

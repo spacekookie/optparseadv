@@ -223,7 +223,8 @@ class AdvOptParse:
 	# to call this function multiple times.
 	#
 	def sub_aliases(self, master, aliases):
-		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
+		if master not in self.opt_hash: 
+			if self.debug: print "[DEBUG]:", "Could not identify master command. Aborting!" ; return
 
 		for key, value in aliases.iteritems():
 			if key not in self.opt_hash[master]: warnings.warn("Could not identify sub command. Skipping") ; continue
@@ -370,7 +371,8 @@ class AdvOptParse:
 
 		print ""
 		
-		if self.opt_hash: print _s_ + "General:"
+		if self.opt_hash[__VERSION__][__ACTIVE__] or self.opt_hash[__HELPER__][__ACTIVE__]:
+			if self.opt_hash: print _s_ + "General:"
 		if self.opt_hash[__VERSION__][__ACTIVE__]:
 			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__VERSION__][__ALIASES__]), "Print the version of"), "'%s'" % self.container_name
 		
