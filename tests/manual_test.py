@@ -7,15 +7,15 @@ Test script
 """
 # Prepare application path
 import sys
-sys.path.append('../advoptparse')
+sys.path.append('..')
 
 from advoptparse import parser
 
 def connect(master, fields, sub, data):
-	print master, fields, sub, data
+	print "Master function:", master, fields, sub, data
 
 def faulty(value, error):
-	print value, error
+	print "Faulty function:", value, error
 
 p = parser.AdvOptParse({'connect':(connect, "Connect to servers")}) # 'copy':(connect, "Copy files to a server"
 p.set_container_name("Poke")
@@ -23,7 +23,7 @@ p.set_fields_name("Servers")
 p.register_failsafe(faulty)
 p.set_container_version("0.6.1a")
 p.define_version_handle(['-v'])
-p.enable_debug()
+# p.enable_debug()
 
 p.set_master_fields('connect', True)
 # p.set_master_fields('copy', True)
@@ -31,13 +31,14 @@ p.set_master_fields('connect', True)
 p.set_master_aliases('connect', ['c'])
 # p.set_master_aliases('copy', ['cp'])
 
-p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
+
+# p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
 p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding for the current session (if not enabled by default)")})
 
 # p.add_suboptions('copy', {'--file': (None, parser.__FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
 
 # p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
-p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
+# p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 # 'copy', {'-f': ['--file'], '-t': ['--target']
 
 p.print_tree()

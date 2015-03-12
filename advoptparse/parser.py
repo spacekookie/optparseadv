@@ -1,5 +1,5 @@
 """
-AdvOptParse – An advanced options parser for python.
+AdvOptParse - An advanced options parser for python.
 
 Library
 ===========
@@ -8,7 +8,7 @@ Main parser in the library. Augmented with various utilities.
 
 Contains:
 
-AdvOptParse – Main parser object to hold instance variables and option types.
+AdvOptParse - Main parser object to hold instance variables and option types.
 
 ===========
 
@@ -260,6 +260,9 @@ class AdvOptParse:
 	# to it.
 	#
 	def parse(self, c = None):
+		if self.slave_fields == None:
+			self.define_fields({})
+
 		for alias in self.opt_hash[__HELPER__][__ALIASES__]:
 			if c == alias:
 				self.help_screen()
@@ -333,13 +336,14 @@ class AdvOptParse:
 								if wait_for_slave:
 									has_slave = True
 									wait_for_slave = False
+
 									if sub_command in self.slave_fields:
 										slave_field = (sub_command, self.slave_fields[sub_command])
 									else:
 										if self.failsafe_function == None:
 											print "An Error occured while parsing arguments."
 										else:
-											self.failsafe_function(cmd, 'Unknown Arguments')
+											self.failsafe_function(cmd, 'Unknown field!')
 										return
 									continue
 

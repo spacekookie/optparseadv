@@ -1,9 +1,11 @@
-# =========================================================
-# Copyright: (c) 2015 Katharina Sabel
-# License  : GPL 2.0 (See LICENSE)
-# Comment  : Console utility. Not sure what will happen with this.
-#
-# =========================================================
+"""
+Module: Console utility
+
+===========
+
+:copyright: (C) 2015 Katharina Sabel <SpaceKookie>
+:license: GPLv2 (See LICENSE)
+"""
 
 def getTerminalSize():
     import os
