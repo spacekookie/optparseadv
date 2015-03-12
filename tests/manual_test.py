@@ -29,7 +29,7 @@ p.set_fields_name("Servers")
 p.register_failsafe(faulty)
 p.set_container_version("0.6.1a")
 p.define_version_handle(['-v'])
-p.set_hidden_subs(True)
+# p.set_hidden_subs(True)
 p.set_version_handle(False)
 p.set_help_handle(False)
 
