@@ -84,6 +84,7 @@ class AdvOptParse:
 		self.container_name = None
 		self.fields_name = "Fields"
 		self.slave_fields = None
+		self.hidden_subs = False
 		self.debug = False
 
 	# Set the name of the container application that's used in the help screen
@@ -180,6 +181,11 @@ class AdvOptParse:
 	def define_version_handle(self, versions):
 		self.opt_hash[__VERSION__][__ALIASES__] = versions
 
+	# Enables the subs to be hidden from the help screen and thus only prints master, level commands
+	#
+	def set_hidden_subs(self, boolean):
+		self.hidden_subs = boolean
+
 	# Enable the version handle (and list it in the helper screen)
 	#
 	def set_version_handle(self, boolean):
@@ -260,8 +266,7 @@ class AdvOptParse:
 	# to it.
 	#
 	def parse(self, c = None):
-		if self.slave_fields == None:
-			self.define_fields({})
+		if self.slave_fields == None: self.define_fields({})
 
 		for alias in self.opt_hash[__HELPER__][__ALIASES__]:
 			if c == alias:
@@ -375,9 +380,10 @@ class AdvOptParse:
 	# Generates a help screen for the container appliction.
 	#
 	def help_screen(self):
+		if self.slave_fields == None: self.define_fields({})
 		_s_ = " "
-		_ds_ = "   "
-		_dds_ = "      "
+		_ds_ = "    "
+		_dds_ = "       "
 		# print "%-5s" % "Usage: Poke [Options]"
 
 		# if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
@@ -387,10 +393,9 @@ class AdvOptParse:
 		if not self.opt_hash: print "Usage:", self.container_name
 		else: print "Usage:", self.container_name, "[options]"
 
-		print ""
-		
 		if self.opt_hash[__VERSION__][__ACTIVE__] or self.opt_hash[__HELPER__][__ACTIVE__]:
-			if self.opt_hash: print _s_ + "General:"
+			print ""
+			print _s_ + "General:"
 		if self.opt_hash[__VERSION__][__ACTIVE__]:
 			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__VERSION__][__ALIASES__]), "Print the version of"), "'%s'" % self.container_name
 		
@@ -403,9 +408,10 @@ class AdvOptParse:
 		for key, value in self.opt_hash.iteritems():
 			if "__" not in key:
 				print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
-				for k, v in self.opt_hash[key].iteritems():
-					if "__" not in k:
-						print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
+				if not self.hidden_subs:
+					for k, v in self.opt_hash[key].iteritems():
+						if "__" not in k:
+							print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
 
 		print ""
 

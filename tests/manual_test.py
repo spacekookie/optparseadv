@@ -17,18 +17,28 @@ def connect(master, fields, sub, data):
 def faulty(value, error):
 	print "Faulty function:", value, error
 
-p = parser.AdvOptParse({'connect':(connect, "Connect to servers")}) # 'copy':(connect, "Copy files to a server"
+p = parser.AdvOptParse({
+	'connect':(connect, "Connect to servers"), 
+	'copy':(connect, "Copy files to a server"), 
+	'push':(connect, "Push something to a remote server..hrrrhrrrr"),
+	'mount':(connect, "Mount a remote server like it's your bitch"), 
+	'clone':(connect, "Clone remote server like it's a git")}) 
+
 p.set_container_name("Poke")
 p.set_fields_name("Servers")
 p.register_failsafe(faulty)
 p.set_container_version("0.6.1a")
 p.define_version_handle(['-v'])
+p.set_hidden_subs(True)
+p.set_version_handle(False)
+p.set_help_handle(False)
+
 # p.enable_debug()
 
 p.set_master_fields('connect', True)
 # p.set_master_fields('copy', True)
 
-p.set_master_aliases('connect', ['c'])
+# p.set_master_aliases('connect', ['c'])
 # p.set_master_aliases('copy', ['cp'])
 
 
@@ -42,12 +52,12 @@ p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding
 # 'copy', {'-f': ['--file'], '-t': ['--target']
 
 p.print_tree()
-# p.help_screen()
+p.help_screen()
 
-try:
-	p.parse('connect -X')
-except:
-	pass
+# try:
+# 	p.parse('connect -X')
+# except:
+# 	pass
 
 #########################
 #   TEST SCRIPT BELOW   #
