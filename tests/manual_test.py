@@ -1,10 +1,10 @@
-# =========================================================
-# Copyright: (c) 2015 Katharina Sabel
-# License  : GPL 2.0 (See LICENSE)
-# Comment  : Manual testing script for options parser
-#
-# =========================================================
+"""
+Test script
+===========
 
+:copyright: (C) 2015 Katharina Sabel <SpaceKookie>
+:license: GPLv2 (See LICENSE)
+"""
 # Prepare application path
 import sys
 sys.path.append('../advoptparse')

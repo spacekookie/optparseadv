@@ -1,3 +1,11 @@
+"""
+Test script
+===========
+
+:copyright: (C) 2015 Katharina Sabel <SpaceKookie>
+:license: GPLv2 (See LICENSE)
+"""
+
 # fake setup 
 PASS = ["foo.exe", "bar.exe", "really_long_filename.exe"]
 FAILED = ["failed.exe"]

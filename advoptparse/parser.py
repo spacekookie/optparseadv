@@ -1,9 +1,23 @@
-# =========================================================
-# Copyright: (c) 2015 Katharina Sabel
-# License  : GPL 2.0 (See LICENSE)
-# Comment  : Main file for the advanced options parser
-#
-# =========================================================
+"""
+AdvOptParse – An advanced options parser for python.
+
+Library
+===========
+
+Main parser in the library. Augmented with various utilities.
+
+Contains:
+
+AdvOptParse – Main parser object to hold instance variables and option types.
+
+===========
+
+See README.md for Build/Installation and setup details.
+
+:copyright: (C) 2015 Katharina Sabel <SpaceKookie>
+:license: GPLv2 (See LICENSE)
+"""
+
 
 # Some imports
 import itertools
