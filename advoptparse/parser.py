@@ -152,7 +152,13 @@ class AdvOptParse:
 	# input (such as 'rails server' vs 'rails s' does it)
 	#
 	def set_master_aliases(self, master, aliases):
-		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
+		if master not in self.opt_hash:
+			if self.enable_debug:
+				if self.failsafe_function == None:
+					print "An Error occured while parsing arguments."
+				else:
+					self.failsafe_function(cmd, 'Unknown field!')
+			return
 		if master not in aliases: aliases.append(master)
 		self.opt_hash[master][__ALIASES__] = aliases
 
@@ -310,7 +316,6 @@ class AdvOptParse:
 				# This loop iterates over the sub-commands of several master commands.
 				#
 				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
-					# print sub_counter
 					if sub_counter == 0:
 						focus = self.__alias_to_master(cmd)
 						# print focus, cmd
@@ -321,10 +326,20 @@ class AdvOptParse:
 								continue
 
 					else:
-						rgged = cmd.replace('=', '= ').split()
+						# print "Splitting with regex:", cmd
+						pattern = r'"([\w\W]*)"'
+						rgged = re.split(pattern, cmd)
+						
+						# if '"' in cmd:
+						# 	# pattern = r'"([\w\W]*)"'
 
+
+						# 	# rgged = re.split(pattern, cmd)
+						# 	print rgged, cmd
+						# else:
+						# 	rgged = cmd.replace('=', '= ').split()
+						
 						for sub_command in rgged:
-							# print "Sub command:", sub_command
 							if skipper: 
 								skipper = False
 								continue
@@ -375,7 +390,7 @@ class AdvOptParse:
 			self.failsafe_function(content, 'Invalid Options')
 
 		# Return false if nothing was handled for container application to be able to
-		raise Warning
+		return False
 
 	# Generates a help screen for the container appliction.
 	#
@@ -443,3 +458,47 @@ class AdvOptParse:
 				if alias in value[__ALIASES__]:
 					return key
 		return None
+
+def connect(master, fields, sub, data):
+	print "Master function:", master, fields, sub, data
+
+def faulty(value, error):
+	print "Faulty function:", value, error
+
+p = AdvOptParse({
+	'connect':(connect, "Connect to servers")}) 
+
+p.set_container_name("Poke")
+p.set_fields_name("Servers")
+p.register_failsafe(faulty)
+p.set_container_version("0.6.1a")
+p.define_version_handle(['-v'])
+# p.set_hidden_subs(True)
+p.set_version_handle(False)
+p.set_help_handle(False)
+
+# p.enable_debug()
+
+p.set_master_fields('connect', True)
+# p.set_master_fields('copy', True)
+
+# p.set_master_aliases('connect', ['c'])
+# p.set_master_aliases('copy', ['cp'])
+
+
+p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
+p.add_suboptions('connect', {'--cmd': (None, __FIELD__, "Some cool field")})
+
+# p.add_suboptions('copy', {'--file': (None, __FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
+
+# p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
+# p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
+# 'copy', {'-f': ['--file'], '-t': ['--target']
+
+# p.print_tree()
+# p.help_screen()
+
+try:
+	p.parse('connect nas --cmd="Some"')
+except:
+	pass

@@ -18,11 +18,7 @@ def faulty(value, error):
 	print "Faulty function:", value, error
 
 p = parser.AdvOptParse({
-	'connect':(connect, "Connect to servers"), 
-	'copy':(connect, "Copy files to a server"), 
-	'push':(connect, "Push something to a remote server..hrrrhrrrr"),
-	'mount':(connect, "Mount a remote server like it's your bitch"), 
-	'clone':(connect, "Clone remote server like it's a git")}) 
+	'connect':(connect, "Connect to servers")}) 
 
 p.set_container_name("Poke")
 p.set_fields_name("Servers")
@@ -42,8 +38,8 @@ p.set_master_fields('connect', True)
 # p.set_master_aliases('copy', ['cp'])
 
 
-# p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
-p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding for the current session (if not enabled by default)")})
+p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
+p.add_suboptions('connect', {'--cmd': (None, parser.__FIELD__, "Some cool field")})
 
 # p.add_suboptions('copy', {'--file': (None, parser.__FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
 
@@ -51,13 +47,13 @@ p.add_suboptions('connect', {'-X': (None, parser.__VALUE__, "Enable X forwarding
 # p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
 # 'copy', {'-f': ['--file'], '-t': ['--target']
 
-p.print_tree()
-p.help_screen()
+# p.print_tree()
+# p.help_screen()
 
-# try:
-# 	p.parse('connect -X')
-# except:
-# 	pass
+try:
+	p.parse(sys.argv[1:])
+except:
+	pass
 
 #########################
 #   TEST SCRIPT BELOW   #
