@@ -326,18 +326,7 @@ class AdvOptParse:
 								continue
 
 					else:
-						# print "Splitting with regex:", cmd
-						pattern = r'"([\w\W]*)"'
-						rgged = re.split(pattern, cmd)
-						
-						# if '"' in cmd:
-						# 	# pattern = r'"([\w\W]*)"'
-
-
-						# 	# rgged = re.split(pattern, cmd)
-						# 	print rgged, cmd
-						# else:
-						# 	rgged = cmd.replace('=', '= ').split()
+						rgged = cmd.replace('=', '= ').split()
 						
 						for sub_command in rgged:
 							if skipper: 
@@ -458,47 +447,3 @@ class AdvOptParse:
 				if alias in value[__ALIASES__]:
 					return key
 		return None
-
-def connect(master, fields, sub, data):
-	print "Master function:", master, fields, sub, data
-
-def faulty(value, error):
-	print "Faulty function:", value, error
-
-p = AdvOptParse({
-	'connect':(connect, "Connect to servers")}) 
-
-p.set_container_name("Poke")
-p.set_fields_name("Servers")
-p.register_failsafe(faulty)
-p.set_container_version("0.6.1a")
-p.define_version_handle(['-v'])
-# p.set_hidden_subs(True)
-p.set_version_handle(False)
-p.set_help_handle(False)
-
-# p.enable_debug()
-
-p.set_master_fields('connect', True)
-# p.set_master_fields('copy', True)
-
-# p.set_master_aliases('connect', ['c'])
-# p.set_master_aliases('copy', ['cp'])
-
-
-p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
-p.add_suboptions('connect', {'--cmd': (None, __FIELD__, "Some cool field")})
-
-# p.add_suboptions('copy', {'--file': (None, __FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
-
-# p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
-# p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
-# 'copy', {'-f': ['--file'], '-t': ['--target']
-
-# p.print_tree()
-# p.help_screen()
-
-try:
-	p.parse('connect nas --cmd="Some"')
-except:
-	pass
