@@ -18,6 +18,7 @@ See README.md for Build/Installation and setup details.
 :license: GPLv2 (See LICENSE)
 """
 
+from state_machine import StateReader
 
 # Some imports
 import itertools
@@ -86,6 +87,8 @@ class AdvOptParse:
 		self.slave_fields = None
 		self.hidden_subs = False
 		self.debug = False
+		if masters == {}:
+			self.has_commands = False
 
 	# Set the name of the container application that's used in the help screen
 	#
@@ -113,6 +116,7 @@ class AdvOptParse:
 			self.opt_hash[key][__NOTE__] = value[1]
 			self.set_master_aliases(key, [])
 			self.set_master_fields(key, False)
+			self.has_commands = True
 
 		# Setup the version and helper handle. By default '-h' and '--version' are set to 'True'
 		self.opt_hash[__HELPER__] = { __ALIASES__: ['-h'], __ACTIVE__: True}
@@ -152,13 +156,7 @@ class AdvOptParse:
 	# input (such as 'rails server' vs 'rails s' does it)
 	#
 	def set_master_aliases(self, master, aliases):
-		if master not in self.opt_hash:
-			if self.enable_debug:
-				if self.failsafe_function == None:
-					print "An Error occured while parsing arguments."
-				else:
-					self.failsafe_function(cmd, 'Unknown field!')
-			return
+		if master not in self.opt_hash: warnings.warn("Could not identify master command. Aborting!") ; return
 		if master not in aliases: aliases.append(master)
 		self.opt_hash[master][__ALIASES__] = aliases
 
@@ -284,7 +282,9 @@ class AdvOptParse:
 				print self.container_version
 				return
 
-		content = (sys.args if (c == None) else c.split())
+		content = StateReader().make(c)
+
+		# content = (sys.args if (c == None) else c.split())
 		counter = 0
 		master_indices = []
 		focus = None
@@ -316,6 +316,7 @@ class AdvOptParse:
 				# This loop iterates over the sub-commands of several master commands.
 				#
 				for cmd in itertools.islice(content, index, master_indices[counter + 1] + 1):
+					# print sub_counter
 					if sub_counter == 0:
 						focus = self.__alias_to_master(cmd)
 						# print focus, cmd
@@ -326,9 +327,10 @@ class AdvOptParse:
 								continue
 
 					else:
-						rgged = cmd.replace('=', '= ').split()
-						
+						rgged = cmd.replace('=', '=****').split('****')
+
 						for sub_command in rgged:
+							# print "Sub command:", sub_command
 							if skipper: 
 								skipper = False
 								continue
@@ -379,7 +381,7 @@ class AdvOptParse:
 			self.failsafe_function(content, 'Invalid Options')
 
 		# Return false if nothing was handled for container application to be able to
-		return False
+		raise Warning
 
 	# Generates a help screen for the container appliction.
 	#
@@ -406,9 +408,9 @@ class AdvOptParse:
 		if self.opt_hash[__HELPER__][__ACTIVE__]:
 			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__HELPER__][__ALIASES__]), "Print this help screen")
 
-		print ""
+		
 
-		if self.opt_hash: print _s_ + "Commands:"
+		if self.opt_hash and self.has_commands: print "" ; print _s_ + "Commands:"
 		for key, value in self.opt_hash.iteritems():
 			if "__" not in key:
 				print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
