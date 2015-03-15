@@ -2,10 +2,11 @@
 
 import re
 
-text = 'add-server -f -X --name="some cool shit" --path=/path/here'
+text = 'add -f -X --name="some cool shit" --path=/path/here'
 
 # Magic RegEx
-pattern = "([a-zA-Z-_]+[A-Z]*)=*(\"([\w\W]*)\"|/([\w\W]+))*"
+pattern = "([a-zA-Z0-9]+ (((((--([a-zA-Z0-9]+ )(([a-zA-Z0-9]+=[a-zA-Z0-1]+ )*))+))|(([a-zA-Z0-9]+=[a-zA-Z0-1]+ )+)|)))*"
+#pattern = "([a-zA-Z-_]+[A-Z]*)=*(\"([\w\W]*)\"|/([\w\W]+))*"
 
 # ([a-z]*-*_*[A-Z]*)=*("([\w\W]*)"|/([\w\W]*))*
 

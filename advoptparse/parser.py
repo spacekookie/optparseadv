@@ -18,6 +18,7 @@ See README.md for Build/Installation and setup details.
 :license: GPLv2 (See LICENSE)
 """
 
+from state_machine import StateReader
 
 # Some imports
 import itertools
@@ -86,6 +87,8 @@ class AdvOptParse:
 		self.slave_fields = None
 		self.hidden_subs = False
 		self.debug = False
+		if masters == {}:
+			self.has_commands = False
 
 	# Set the name of the container application that's used in the help screen
 	#
@@ -113,6 +116,7 @@ class AdvOptParse:
 			self.opt_hash[key][__NOTE__] = value[1]
 			self.set_master_aliases(key, [])
 			self.set_master_fields(key, False)
+			self.has_commands = True
 
 		# Setup the version and helper handle. By default '-h' and '--version' are set to 'True'
 		self.opt_hash[__HELPER__] = { __ALIASES__: ['-h'], __ACTIVE__: True}
@@ -278,7 +282,9 @@ class AdvOptParse:
 				print self.container_version
 				return
 
-		content = (sys.args if (c == None) else c.split())
+		content = StateReader().make(c)
+
+		# content = (sys.args if (c == None) else c.split())
 		counter = 0
 		master_indices = []
 		focus = None
@@ -321,7 +327,7 @@ class AdvOptParse:
 								continue
 
 					else:
-						rgged = cmd.replace('=', '= ').split()
+						rgged = cmd.replace('=', '=****').split('****')
 
 						for sub_command in rgged:
 							# print "Sub command:", sub_command
@@ -402,9 +408,9 @@ class AdvOptParse:
 		if self.opt_hash[__HELPER__][__ACTIVE__]:
 			print _ds_ + "%-20s %s" % (self.__clean_aliases(self.opt_hash[__HELPER__][__ALIASES__]), "Print this help screen")
 
-		print ""
+		
 
-		if self.opt_hash: print _s_ + "Commands:"
+		if self.opt_hash and self.has_commands: print "" ; print _s_ + "Commands:"
 		for key, value in self.opt_hash.iteritems():
 			if "__" not in key:
 				print _ds_ + "%-20s %s" % (self.__clean_aliases(value[__ALIASES__]), value[__NOTE__])
@@ -443,48 +449,3 @@ class AdvOptParse:
 				if alias in value[__ALIASES__]:
 					return key
 		return None
-
-
-def connect(master, fields, sub, data):
-	print "Master function:", master, fields, sub, data
-
-def faulty(value, error):
-	print "Faulty function:", value, error
-
-p = AdvOptParse({
-	'connect':(connect, "Connect to servers")}) 
-
-p.set_container_name("Poke")
-p.set_fields_name("Servers")
-p.register_failsafe(faulty)
-p.set_container_version("0.6.1a")
-p.define_version_handle(['-v'])
-# p.set_hidden_subs(True)
-p.set_version_handle(False)
-p.set_help_handle(False)
-
-# p.enable_debug()
-
-p.set_master_fields('connect', True)
-# p.set_master_fields('copy', True)
-
-# p.set_master_aliases('connect', ['c'])
-# p.set_master_aliases('copy', ['cp'])
-
-
-p.define_fields({'nas':('192.168.2.131', 'Local data and build server'), 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
-p.add_suboptions('connect', {'--cmd': (None, __FIELD__, "Some cool field")})
-
-# p.add_suboptions('copy', {'--file': (None, __FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
-
-# p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
-# p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
-# 'copy', {'-f': ['--file'], '-t': ['--target']
-
-# p.print_tree()
-# p.help_screen()
-
-try:
-	p.parse('connect nas --cmd=reboot')
-except:
-	pass
