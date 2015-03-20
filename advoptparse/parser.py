@@ -56,7 +56,7 @@ __HELPER__ = '__helper__'
 __VERSION__ = '__version__'
 
 # Helper to indicate that a boolean is being stored
-__ACTIVE__ = '__kinkysex__'
+__ACTIVE__ = '__active__'
 
 # Binds an outside function to the failsafe handler.
 # Without a bound function a default error message will be
@@ -114,6 +114,7 @@ class AdvOptParse:
 			self.opt_hash[key] = {}
 			self.opt_hash[key][__FUNCT__] = value[0]
 			self.opt_hash[key][__NOTE__] = value[1]
+			self.opt_hash[key][__ACTIVE__] = True
 			self.set_master_aliases(key, [])
 			self.set_master_fields(key, False)
 			self.has_commands = True
@@ -148,6 +149,7 @@ class AdvOptParse:
 			self.opt_hash[master][key][__TYPE__] = value[1]
 			self.opt_hash[master][key][__DATAFIELD__] = value[0]
 			self.opt_hash[master][key][__NOTE__] = value[2]
+			self.opt_hash[master][key][__ACTIVE__] = True
 
 	# Create aliases for a master command that invoke the same
 	# functions as the actual master command.
@@ -190,6 +192,27 @@ class AdvOptParse:
 	def set_hidden_subs(self, boolean):
 		self.hidden_subs = boolean
 
+	def set_master_visibility(self, master, boolean):
+		if master not in self.opt_hash:
+			if self.debug: print "[DEBUG]:", "Could not identify master command. Aborting!" ; return
+
+		self.opt_hash[master][__ACTIVE__] = boolean
+
+	def set_sub_visibility(self, value, boolean):
+		if value[0] not in self.opt_hash:
+			if value[1] not in self.opt_hash[value[0]]:
+				if self.debug: print "[DEBUG]:", "Could not identify sub command. Aborting!" ; return
+
+		self.opt_hash[value[0]][value[2]][__ACTIVE__] = boolean
+
+	def set_field_visibility(self, field, boolean):
+		if field not in self.slave_fields:
+			if self.debug: print "[DEBUG]:", "Could not identify field. Aborting!" ; return
+
+		self.slave_fields[field + __ACTIVE__] = boolean
+
+
+
 	# Enable the version handle (and list it in the helper screen)
 	#
 	def set_version_handle(self, boolean):
@@ -213,6 +236,7 @@ class AdvOptParse:
 		for key, value in fields.iteritems():
 			if key not in self.slave_fields: self.slave_fields[key] = {}
 			self.slave_fields[key] = value
+			self.slave_fields[key + __ACTIVE__] = True
 
 	# Key is the name of a field.
 	# Value is a tuple of information to be passed down to a callback function when the field is
@@ -227,7 +251,7 @@ class AdvOptParse:
 	#
 	def add_field(self, key, value):
 		if self.slave_fields == None: self.slave_fields = {}
-		self.slave_fields[key] = value
+		self.slave_fields[key + __ACTIVE__] = value
 
 	# Create aliases for a sub command that invoke the same
 	# functions as the actual sub command.
@@ -300,6 +324,7 @@ class AdvOptParse:
 		skipper = False
 		wait_for_slave = False
 		master_indices.append(len(content))
+		target_field = None
 		# print master_indices
 
 		# This loop iterates over the master level commands
@@ -350,6 +375,9 @@ class AdvOptParse:
 
 									if sub_command in self.slave_fields:
 										slave_field = (sub_command, self.slave_fields[sub_command])
+
+										# Add target field persistence here in later version?
+										target_field = slave_field
 									else:
 										if self.failsafe_function == None:
 											print "An Error occured while parsing arguments."
@@ -385,11 +413,12 @@ class AdvOptParse:
 
 	# Generates a help screen for the container appliction.
 	#
-	def help_screen(self):
+	def help_screen(self, pattern = {}):
 		if self.slave_fields == None: self.define_fields({})
 		_s_ = " "
 		_ds_ = "    "
 		_dds_ = "       "
+		if pattern != {}: self.help_screen_evo(pattern,_s_,_ds_,_dds_) ; return
 		# print "%-5s" % "Usage: Poke [Options]"
 
 		# if self.debug: print "[DEBUG]: Your terminal's width is: %d" % width
@@ -417,14 +446,29 @@ class AdvOptParse:
 				if not self.hidden_subs:
 					for k, v in self.opt_hash[key].iteritems():
 						if "__" not in k:
-							print _dds_ + "%-22s %s" % (self.__clean_aliases(v[__ALIASES__]), v[__NOTE__])
+							sub_command = self.__clean_aliases(v[__ALIASES__])
+							if self.opt_hash[key][sub_command][__ACTIVE__]:
+								print _dds_ + "%-22s %s" % (sub_command, v[__NOTE__])
 
 		print ""
 
 		if self.slave_fields: print _s_ + self.fields_name + ":"
 		for key, value in self.slave_fields.iteritems():
-			description = str(value)[1:-1].replace("\'", "")
-			print _ds_ + "%-20s %s" % (key, description)
+			if "__" not in key:
+				if self.slave_fields[key + __ACTIVE__]:
+					if not isinstance(value, str):
+						if (len(value) > 1):
+							description = str(value)[1:-1].replace("\'", "")
+						else:
+							description = value
+					else:
+						description = value
+					print _ds_ + "%-20s %s" % (key, description)
+
+	def help_screen_evo(self, pattern, _s_, _ds_, _dds_):
+		print "Not implemented yet. Use the help-screen without a pattern!"
+		print "Check back in 0.3.0 or something..."
+		
 
 	def __clean_aliases(self, aliases):
 		string = ""
@@ -449,3 +493,52 @@ class AdvOptParse:
 				if alias in value[__ALIASES__]:
 					return key
 		return None
+
+
+def connect(master, fields, sub, data):
+	print "Master function:", master, fields, sub, data
+
+def faulty(value, error):
+	print "Faulty function:", value, error
+
+p = AdvOptParse({
+	'connect':(connect, "Connect to servers")}) 
+
+p.set_container_name("Poke")
+p.set_fields_name("Servers")
+p.register_failsafe(faulty)
+p.set_container_version("0.6.1a")
+p.define_version_handle(['-v'])
+# p.set_hidden_subs(True)
+p.set_version_handle(False)
+p.set_help_handle(False)
+
+p.enable_debug()
+
+p.set_master_fields('connect', True)
+# p.set_master_fields('copy', True)
+
+# p.set_master_aliases('connect', ['c'])
+# p.set_master_aliases('copy', ['cp'])
+
+
+p.define_fields({'nas':'192.168.2.131', 'lrg':('78.47.47.174', 'Remote starmade, data and build server')})
+# p.set_field_visibility('lrg', False)
+p.add_suboptions('connect', {'--cmd': (None, __FIELD__, "Some cool field")})
+
+# p.add_suboptions('copy', {'--file': (None, parser.__FIELD__, "Determine an input file to be transfered"), '--target': (None, parser.__FIELD__, "Determine the target location on a remote server")})
+
+# p.sub_aliases('connect', {'-X': ['-X'], '--cmd': ['-c']})
+# p.sub_aliases('copy', {'--target': ['-t'], '--file': ['-f']})
+# 'copy', {'-f': ['--file'], '-t': ['--target']
+
+p.print_tree()
+
+print "\n\n\n\n"
+
+p.help_screen()
+
+# try:
+# 	p.parse("connect")
+# except:
+# 	pass
